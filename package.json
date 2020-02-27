@@ -1,6 +1,6 @@
 {
-  "name": "novastar-controller",
-  "version": "1.0.0",
+	"name": "novastar-controller",
+	"version": "1.0.1",
 	"api_version": "1.0.0",
 	"keywords": [ "NovaStar" ],
 	"manufacturer": "NovaStar",
@@ -10,20 +10,20 @@
 		"VX6S",
 		"NovaProHD"
 	],
-	"shortname": "4k",
+	"shortname": "novastar",
 	"description": "Companion module for Novastar controllers",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bitfocus/companion-module-novastar-controller.git"
-  },
-  "author": "Ritesh Patel <pixeljedi.tech@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/bitfocus/companion-module-novastar-controller/issues"
-  },
-  "homepage": "https://github.com/bitfocus/companion-module-novastar-controller#readme"
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-novastar-controller.git"
+	},
+	"author": "Ritesh Patel <pixeljedi.tech@gmail.com>",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/bitfocus/companion-module-novastar-controller/issues"
+	},
+	"homepage": "https://github.com/bitfocus/companion-module-novastar-controller#readme"
 }

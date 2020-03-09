@@ -59,7 +59,7 @@ exports.getActions  = function() {
 	};
 
 	// VX4S, NovaProHD
-	if (this.config.model == 'vx4s' || this.config.model == 'novaProHD') {
+	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProHD') {
 		actions['pip_onoff'] = {
 			label: 'PIP On/Off',
 			options: [
@@ -75,7 +75,7 @@ exports.getActions  = function() {
 	}
 
 	// VX4S, NovaProHD
-	if (this.config.model == 'vx4s' || this.config.model == 'novaProHD') {
+	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProHD') {
 		actions['change_scaling'] = {
 			label: 'Change Scaling',
 			options: [
@@ -91,7 +91,7 @@ exports.getActions  = function() {
 	}
 
 	// VX6s
-	if (this.config.model == 'vx6s') {
+	if (this.config.modelID == 'vx6s') {
 		actions['load_preset'] = {
 			label: 'Load Preset to Preview',
 			options: [

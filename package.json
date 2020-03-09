@@ -1,6 +1,6 @@
 {
 	"name": "novastar-controller",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"api_version": "1.0.0",
 	"keywords": [ "NovaStar" ],
 	"manufacturer": "NovaStar",
@@ -8,7 +8,10 @@
 		"MCTRL4K",
 		"VX4S",
 		"VX6S",
-		"NovaProHD"
+		"NovaPro HD"
+	],
+	"legacy": [
+		"novastar-vx4s"
 	],
 	"shortname": "novastar",
 	"description": "Companion module for Novastar controllers",
@@ -20,7 +23,7 @@
 		"type": "git",
 		"url": "git+https://github.com/bitfocus/companion-module-novastar-controller.git"
 	},
-	"author": "Ritesh Patel <pixeljedi.tech@gmail.com>",
+	"author": "Keith Rocheck <keith.rocheck@gmail.com>",
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/bitfocus/companion-module-novastar-controller/issues"

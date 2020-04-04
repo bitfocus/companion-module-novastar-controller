@@ -158,47 +158,48 @@ class instance extends instance_skel {
 		let cmd;
 		let id = action.action
 		let options = action.options;
-
+		let element;
 		const lf = '\u000a';
 
 		switch(id) {
 			case 'change_brightness':
-				let element = this.CHOICES_BRIGHTNESS.find(element => element.id === options.brightness);
+				element = this.CHOICES_BRIGHTNESS.find(element => element.id === options.brightness);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
+				break;
 			case 'change_test_pattern':
-				let element = this.CHOICES_TESTPATTERNS.find(element => element.id === options.pattern);
+				element = this.CHOICES_TESTPATTERNS.find(element => element.id === options.pattern);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
 				break;
 			case 'change_display_mode':
-				let element = this.CHOICES_DISPLAYMODE.find(element => element.id === options.display_mode);
+				element = this.CHOICES_DISPLAYMODE.find(element => element.id === options.display_mode);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
 				break;
 			case 'change_input':
-				let element = this.model.inputs.find(element => element.id === options.input);
+				element = this.model.inputs.find(element => element.id === options.input);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
 				break;
 			case 'pip_onoff':
-				let element = this.CHOICES_SCALING.find(element => element.id === options.value);
+				element = this.CHOICES_PIP_ONOFF.find(element => element.id === options.value);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
 				break;
 			case 'change_scaling':
-				let element = this.CHOICES_SCALING.find(element => element.id === options.scale);
+				element = this.CHOICES_SCALING.find(element => element.id === options.scale);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
 				break;
 			case 'load_preset':
-				let element = this.CHOICES_PRESETS_VX6S.find(element => element.id === options.preset);
+				element = this.CHOICES_PRESETS_VX6S.find(element => element.id === options.preset);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}

@@ -61,14 +61,14 @@ class instance extends instance_skel {
 		];
 		
 		// VX6S Display Modes
-		this.CHOICES_VX6S_DISPLAYMODE = [
+		this.CHOICES_DISPLAYMODE_VX6S = [
 			{ id: '0', label: 'Normal', cmd: new Buffer([0x55,0xAA,0x00,0x38,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x04,0x00,0x00,0x13,0x01,0x00,0x03,0xA7,0x56]) },
 			{ id: '1', label: 'Freeze', cmd: new Buffer([0x55,0xAA,0x00,0x35,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x04,0x00,0x00,0x13,0x01,0x00,0x03,0xA5,0x56]) },
 			{ id: '2', label: 'Black',  cmd: new Buffer([0x55,0xAA,0x00,0x37,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x04,0x00,0x00,0x13,0x01,0x00,0x03,0xA2,0x56]) }
 		];	
 
 		// VX6S Working Modes
-		this.CHOICES_VX6S_WORKINGMODE = [
+		this.CHOICES_WORKINGMODE_VX6S = [
 			{ id: '0', label: 'Direct',   cmd: new Buffer([0x55,0xAA,0x00,0xEC,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x2C,0x00,0x00,0x13,0x01,0x00,0x00,0x80,0x57]) },
 			{ id: '1', label: 'Switcher', cmd: new Buffer([0x55,0xAA,0x00,0x1E,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x2C,0x00,0x00,0x13,0x01,0x00,0x01,0xB3,0x56]) }
 		];					
@@ -162,10 +162,10 @@ class instance extends instance_skel {
 		];
 
 		this.CONFIG_MODEL = {
-			vx4s:      { id: 'vx4s',      label: 'VX4S',       inputs: this.CHOICES_INPUTS_VX4S      },
-			vx6s:      { id: 'vx6s',      label: 'VX6s',       inputs: this.CHOICES_INPUTS_VX6S      },
-			novaProHD: { id: 'novaProHD', label: 'NovaPro HD', inputs: this.CHOICES_INPUTS_NOVAPROHD },
-			mctrl4k:   { id: 'mctrl4k',   label: 'MCTRL4K',    inputs: this.CHOICES_INPUTS_MCTRL4K   }
+			vx4s:      { id: 'vx4s',      label: 'VX4S',       inputs: this.CHOICES_INPUTS_VX4S,      displayModes: this.CHOICES_DISPLAYMODE      },
+			vx6s:      { id: 'vx6s',      label: 'VX6s',       inputs: this.CHOICES_INPUTS_VX6S,      displayModes: this.CHOICES_DISPLAYMODE_VX6S },
+			novaProHD: { id: 'novaProHD', label: 'NovaPro HD', inputs: this.CHOICES_INPUTS_NOVAPROHD, displayModes: this.CHOICES_DISPLAYMODE      },
+			mctrl4k:   { id: 'mctrl4k',   label: 'MCTRL4K',    inputs: this.CHOICES_INPUTS_MCTRL4K,   displayModes: this.CHOICES_DISPLAYMODE      }
 		};
 
 		this.CHOICES_MODEL = Object.values(this.CONFIG_MODEL);
@@ -214,7 +214,13 @@ class instance extends instance_skel {
 				}
 				break;
 			case 'change_display_mode':
-				element = this.CHOICES_DISPLAYMODE.find(element => element.id === options.display_mode);
+				element = this.model.displayModes.find(element => element.id === options.display_mode);
+				if (element !== undefined) {
+					cmd = element.cmd;
+				}
+				break;
+			case 'change_working_mode':
+				element = this.CHOICES_WORKINGMODE_VX6S.find(element => element.id === options.working_mode);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}

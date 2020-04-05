@@ -53,10 +53,26 @@ exports.getActions  = function() {
 				label: 'Display Mode',
 				id: 'display_mode',
 				default: '0',
-				choices: this.CHOICES_DISPLAYMODE
+				choices: this.model.displayModes
 			}
 		]
 	};
+
+	// VX6s
+	if (this.config.modelID == 'vx6s') {
+		actions['change_working_mode'] = {
+			label: 'Change Working Mode',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Working Mode',
+					id: 'working_mode',
+					default: '0',
+					choices: this.CHOICES_WORKINGMODE_VX6S
+				}
+			]
+		};
+	}
 
 	// VX4S, NovaProHD
 	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProHD') {

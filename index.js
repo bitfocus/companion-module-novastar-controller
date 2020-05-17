@@ -232,7 +232,7 @@ class instance extends instance_skel {
 				}
 				break;
 			case 'pip_onoff':
-				element = this.CHOICES_SCALING.find(element => element.id === options.value);
+				element = this.CHOICES_PIP_ONOFF.find(element => element.id === options.value);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}

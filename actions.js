@@ -106,6 +106,22 @@ exports.getActions  = function() {
 		}
 	}
 
+	// VX4S
+	if (this.config.modelID == 'vx4s') {
+		actions['load_preset'] = {
+			label: 'Recall Preset',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Preset',
+					id: 'preset',
+					default: '0',
+					choices: this.model.presets
+				}
+			]
+		};
+	}
+
 	// VX6s
 	if (this.config.modelID == 'vx6s') {
 		actions['load_preset'] = {
@@ -116,13 +132,30 @@ exports.getActions  = function() {
 					label: 'Preset',
 					id: 'preset',
 					default: '0',
-					choices: this.CHOICES_PRESETS_VX6S
+					choices: this.model.presets
 				}
 			]
 		};
 
 		actions['take'] = {
 			label: 'Take Preview to Program'
+		};
+	}
+
+
+	// NovaPro UHD Jr
+	if (this.config.modelID == 'novaProHDJr') {
+		actions['load_preset'] = {
+			label: 'Recall Preset',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Preset',
+					id: 'preset',
+					default: '0',
+					choices: this.model.presets
+				}
+			]
 		};
 	}
 

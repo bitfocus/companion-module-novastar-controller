@@ -3,7 +3,7 @@
 	"legacy": [
 		"novastar-vx4s"
 	],
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"api_version": "1.0.0",
 	"keywords": [ "NovaStar" ],
 	"manufacturer": "NovaStar",
@@ -11,7 +11,8 @@
 		"MCTRL4K",
 		"VX4S",
 		"VX6S",
-		"NovaPro HD"
+		"NovaPro HD",
+		"NovaPro HD Jr"
 	],
 	"shortname": "novastar",
 	"description": "Companion module for Novastar controllers",

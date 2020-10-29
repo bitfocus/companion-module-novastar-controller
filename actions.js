@@ -106,8 +106,8 @@ exports.getActions  = function() {
 		}
 	}
 
-	// VX4S, VX6s, NovaPro UHD Jr
-	if (this.config.modelID == 'vx4s' || this.config.modelID == 'vx6s' || this.config.modelID == 'novaProHDJr') {
+	// VX4S, NovaPro UHD Jr
+	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProHDJr') {
 		actions['load_preset'] = {
 			label: 'Recall Preset',
 			options: [
@@ -124,6 +124,19 @@ exports.getActions  = function() {
 
 	// VX6s
 	if (this.config.modelID == 'vx6s') {
+		actions['load_preset'] = {
+			label: 'Load Preset to Preview',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Preset',
+					id: 'preset',
+					default: '0',
+					choices: this.model.presets
+				}
+			]
+		};
+
 		actions['take'] = {
 			label: 'Take Preview to Program'
 		};

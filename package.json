@@ -1,17 +1,21 @@
 {
 	"name": "novastar-controller",
-	"version": "1.0.2",
+	"legacy": [
+		"novastar-vx4s"
+	],
+	"version": "1.0.8",
 	"api_version": "1.0.0",
-	"keywords": [ "NovaStar" ],
+	"keywords": [
+		"LED Processing"
+	],
 	"manufacturer": "NovaStar",
 	"product": [
 		"MCTRL4K",
 		"VX4S",
 		"VX6S",
-		"NovaPro HD"
-	],
-	"legacy": [
-		"novastar-vx4s"
+		"NovaPro HD",
+		"NovaPro HD Jr",
+        "VX1000"
 	],
 	"shortname": "novastar",
 	"description": "Companion module for Novastar controllers",

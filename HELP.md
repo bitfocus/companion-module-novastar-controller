@@ -1,5 +1,5 @@
 ## NovaStar Controller
-This module will allow you to control the following NovaStar products: MCTRL4K, VX4S, VX6S, NovaProHD
+This module will allow you to control the following NovaStar products: MCTRL4K, VX4S, VX6S, NovaProHD, NovaPro UHD Jr,VX1000
 
 ### Configuration
 * Enter the IP address of the device in the configuration settings.
@@ -11,6 +11,7 @@ This module will allow you to control the following NovaStar products: MCTRL4K, 
 * Change Display Mode
 * Change Inputs
 
-**VX4S, VX6S, NovaProHD only:**
+**VX4S, VX6S, NovaProHD, NovaProHDJr only:**
 * PIP On/Off
 * Change Scaling
+* Recall Presets

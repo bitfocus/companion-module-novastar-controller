@@ -10,8 +10,9 @@ This module will allow you to control the following NovaStar products: MCTRL4K, 
 * Change Test Patterns
 * Change Display Mode
 * Change Inputs
+* 
 
-**VX4S, VX6S, NovaProHD, NovaProHDJr only:**
+**VX4S, VX6S, NovaProHD, NovaProHDJr only, VX1000:**
 * PIP On/Off
 * Change Scaling
 * Recall Presets

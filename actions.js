@@ -5,7 +5,7 @@ exports.getActions  = function() {
  //Brightness
 
 	// VX6s, VX4S, NovaProHD, MCTRL4k, NovaPro UHD, NovaPro UHD Jr , VX1000
-    if (this.config.modelID == 'vx4s' || this.config.modelID == 'vx6s' ||this.config.modelID == 'MCTRL4k' || this.config.modelID == 'novaProHD'|| this.config.modelID == 'novaProUHD' || this.config.modelID == 'novaProUHDjr' || this.config.modelID == 'vx1000')
+    if (this.config.modelID == 'vx4s' || this.config.modelID == 'vx6s' ||this.config.modelID == 'MCTRL4k' || this.config.modelID == 'novaProHD'|| this.config.modelID == 'novaProUHD' || this.config.modelID == 'novaProUHDJr' || this.config.modelID == 'vx1000'|| this.config.modelID == 'vx600'|| this.config.modelID == 'vx16s')
 	actions['change_brightness'] = {
 		label: 'Change Brightness',
 		options: [
@@ -18,11 +18,10 @@ exports.getActions  = function() {
 			}
 		]
 	};
-
 //Change Input
 	// VX6s, VX4S, NovaProHD, MCTRL4k, VX1000
 	
-    if (this.config.modelID == 'vx4s' || this.config.modelID == 'vx6s' ||this.config.modelID == 'MCTRL4k' ||this.config.modelID == 'vx1000' || this.config.modelID == 'novaProHD')
+    if (this.config.modelID == 'vx4s' || this.config.modelID == 'vx6s' ||this.config.modelID == 'MCTRL4k'||this.config.modelID == 'vx1000' || this.config.modelID == 'novaProHD'|| this.config.modelID == 'vx600')
         actions['change_input'] = {
 		label: 'Change Input',
 		options: [
@@ -34,7 +33,7 @@ exports.getActions  = function() {
 				choices: this.model.inputs
 			}
 		]
-	}
+    }
 
 //Change Test patterns
 	// VX6s, VX4S, NovaProHD, MCTRL4k,VX1000
@@ -119,7 +118,7 @@ exports.getActions  = function() {
 
 // LOAD PRESETS
     //VX4S, NovaPro UHD Jr,vx1000
-	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProUHDJr' || this.config.modelID == 'vx1000') {
+	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProUHDJr'|| this.config.modelID == 'vx1000'|| this.config.modelID == 'vx600'|| this.config.modelID == 'vx16s') {
 		actions['load_preset'] = {
 			label: 'Recall Preset',
 			options: [

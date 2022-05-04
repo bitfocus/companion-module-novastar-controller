@@ -95,6 +95,11 @@ class instance extends instance_skel {
 			{ id: '1', label: 'Switcher', cmd: Buffer.from([0x55,0xAA,0x00,0x1E,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x2C,0x00,0x00,0x13,0x01,0x00,0x01,0xB3,0x56]) }
 		];					
 
+        // VX6S Working Modes
+        this.CHOICES_WORKINGMODE_J6 = [
+            { id: '0', label: 'Splicer Mode',   cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x2C,0x00,0x00,0x13,0x01,0x00,0x00,0x94,0x56]) },
+            { id: '1', label: 'Switcher Mode', cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x2C,0x00,0x00,0x13,0x01,0x00,0x01,0x95,0x56]) }
+        ];
 		// MCTRL4K Inputs
 		this.CHOICES_INPUTS_MCTRL4K = [
 			{ id: '0', label: 'DVI',          cmd: Buffer.from([0x55,0xAA,0x00,0x3E,0xFE,0xFF,0x00,0x00,0x00,0x00,0x01,0x00,0x23,0x00,0x00,0x02,0x01,0x00,0x61,0x18,0x58]) },
@@ -208,12 +213,12 @@ class instance extends instance_skel {
             { id: '20', label: 'Layer 3-Mosaic',        cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x72,0x00,0x02,0x13,0x03,0x00,0x07,0x00,0x00,0XE5,0x56]) }
         ];
         
-		// MCTRL4K Inputs
+		// PIP on off NovaPro HD & VX4S
 		this.CHOICES_PIP_ONOFF = [
 			{ id: '0', label: 'Off', cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0xFF,0x00,0x00,0x00,0x00,0x01,0x00,0x30,0x00,0x20,0x02,0x01,0x00,0x00,0xA6,0x57]) },
 			{ id: '1', label: 'On',  cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0xFF,0x00,0x00,0x00,0x00,0x01,0x00,0x30,0x00,0x20,0x02,0x01,0x00,0x01,0xA7,0x57]) }
 		];
-
+       
 		this.CHOICES_PRESETS_VX4S = [
 			{ id: '0',  label: 'Preset 1',  cmd: Buffer.from([0x55,0xAA,0x00,0x2E,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x70,0x00,0x20,0x02,0x01,0x00,0x00,0x15,0x57]) },
 			{ id: '1',  label: 'Preset 2',  cmd: Buffer.from([0x55,0xAA,0x00,0x2E,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x70,0x00,0x20,0x02,0x01,0x00,0x01,0x16,0x57]) },
@@ -286,11 +291,11 @@ class instance extends instance_skel {
 		];
 
 		this.CONFIG_MODEL = {
-			vx4s: { id: 'vx4s', label: 'VX4S', brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_VX4S,displayModes: this.CHOICES_DISPLAYMODE,     presets: this.CHOICES_PRESETS_VX4S },
+			vx4s: { id: 'vx4s', label: 'VX4S', brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_VX4S, displayModes: this.CHOICES_DISPLAYMODE,     presets: this.CHOICES_PRESETS_VX4S ,piponoffs :this.CHOICES_PIP_ONOFF },
             
-			vx6s: { id: 'vx6s',label: 'VX6s', brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_VX6S, displayModes: this.CHOICES_DISPLAYMODE_VX6S, presets: this.CHOICES_PRESETS_VX6S },
+			vx6s: { id: 'vx6s',label: 'VX6s', brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_VX6S, displayModes: this.CHOICES_DISPLAYMODE_VX6S, presets: this.CHOICES_PRESETS_VX6S, workingModes: this.CHOICES_WORKINGMODE_VX6S },
             
-			novaProHD: { id: 'novaProHD', label: 'NovaPro HD', brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_NOVAPROHD, displayModes: this.CHOICES_DISPLAYMODE },
+			novaProHD: { id: 'novaProHD', label: 'NovaPro HD', brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_NOVAPROHD, displayModes: this.CHOICES_DISPLAYMODE, piponoffs :this.CHOICES_PIP_ONOFF },
             
 			novaProUHDJr:{ id: 'novaProUHDJr', label: 'NovaPro UHD Jr', brightness: this.CHOICES_BRIGHTNESS_VX1000, displayModes: this.CHOICES_DISPLAYMODE_VX1000, presets: this.CHOICES_PRESETS_NovaProUHDJR },
             
@@ -302,7 +307,7 @@ class instance extends instance_skel {
             
             vx16s: { id: 'vx16s', label: 'VX16S', brightness: this.CHOICES_BRIGHTNESS , displayModes: this.CHOICES_DISPLAYMODE_VX1000, presets: this.CHOICES_PRESETS_VX1000 },
             
-            j6: { id: 'j6', label: 'J6', displayModes: this.CHOICES_DISPLAYMODE_VX1000, presets: this.CHOICES_PRESETS_VX1000 }
+            j6: { id: 'j6', label: 'J6', displayModes: this.CHOICES_DISPLAYMODE_VX1000, presets: this.CHOICES_PRESETS_VX1000, workingModes: this.CHOICES_WORKINGMODE_J6 }
 		};
 
 		this.CHOICES_MODEL = Object.values(this.CONFIG_MODEL);
@@ -356,8 +361,8 @@ class instance extends instance_skel {
 					cmd = element.cmd;
 				}
 				break;
-			case 'change_working_mode':
-				element = this.CHOICES_WORKINGMODE_VX6S.find(element => element.id === options.working_mode);
+            case 'change_working_mode':
+				element = this.model.workingModes.find(element => element.id === options.working_mode);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
@@ -369,7 +374,7 @@ class instance extends instance_skel {
 				}
 				break;
 			case 'pip_onoff':
-				element = this.CHOICES_PIP_ONOFF.find(element => element.id === options.value);
+				element = this.model.piponoffs.find(element => element.id === options.value);
 				if (element !== undefined) {
 					cmd = element.cmd;
 				}
@@ -410,7 +415,7 @@ class instance extends instance_skel {
 				id:   'info',
 				width: 12,
 				label: 'Information',
-				value: 'This module will connect to a NovaStar MCTRL4K, VX4S, VX6S, NovaProHD, or NovaPro UHD Jr,VX1000 LED Processor.'
+				value: 'This module will connect to a NovaStar MCTRL4K, VX4S, VX6S, NovaProHD, or NovaPro UHD Jr,VX1000, VX600, VX16S & J6 LED Processor.'
 			},
 			{
 				type:     'textinput',
@@ -426,7 +431,7 @@ class instance extends instance_skel {
 				label:   'Model',
 				width:   6,
 				choices: this.CHOICES_MODEL,
-				default: 'vx4s'
+				default: 'j6'
 			}
 		]
 	}

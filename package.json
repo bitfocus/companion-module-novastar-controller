@@ -4,9 +4,14 @@
 		"novastar-vx4s"
 	],
 	"version": "1.0.8",
-	"api_version": "1.0.0",
+	"api_version": "1.1.0",
 	"keywords": [
-		"LED Processing"
+		"LED Processors"
+		"LED Screen"
+		"Nova"
+		"Sending card"
+		"Video Processors"
+		
 	],
 	"manufacturer": "Novastar",
 	"product": [
@@ -15,12 +20,12 @@
 		"VX6S",
 		"NovaPro HD",
 		"NovaPro UHD Jr",
-        "VX1000",
-        "VX600",
-        "VX16S",
-        "J6"
-	],
-	"shortname": "novastar",
+        	"VX1000",
+        	"VX600",
+        	"VX16S",
+        	"J6"
+		],
+	"shortname": "Novastar",
 	"description": "Companion module for Novastar controllers",
 	"main": "index.js",
 	"scripts": {

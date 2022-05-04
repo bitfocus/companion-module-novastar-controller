@@ -16,4 +16,4 @@ This module will allow you to control the following NovaStar products: MCTRL4K, 
 **VX4S, VX6S, NovaProHD, NovaProHDJr only:**
 * PIP On/Off
 * Change Scaling
-
+* Recall Presets

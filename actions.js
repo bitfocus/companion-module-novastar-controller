@@ -99,6 +99,47 @@ exports.getActions  = function() {
 		};
 	}
 
+	//PIP
+	// VX1000 only
+	if (this.config.modelID == 'vx1000') {
+		actions['pip_onoff_vx1000'] = {
+			label: 'PIP On/Off VX1000',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'On/Off',
+					id: 'enabled',
+					default: '0',
+					choices: this.model.piponoffs
+				}, 
+				{
+					type: 'number',
+					label: 'Initial X',
+					id: 'initialx',
+					default: '550'
+				},
+				{
+					type: 'number',
+					label: 'Initial Y',
+					id: 'initialy',
+					default: '0'
+				},
+				{
+					type: 'number',
+					label: 'H Width',
+					id: 'hwidth',
+					default: '1307'
+				},
+				{
+					type: 'number',
+					label: 'V Height',
+					id: 'vheight',
+					default: '640'
+				} 
+			]
+		};
+	}
+
 //Scaling
 	// VX4S, NovaProHD
 	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProHD') {

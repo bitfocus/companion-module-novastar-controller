@@ -338,19 +338,90 @@ class instance extends instance_skel {
 		this.actions();
 	}
 
+	get_pip_command_vx1000_checksum (buffer)
+	{
+		// we can't include the first two bytes in our checksum calculation, so we are taking a subarray excluding the first two bytes
+		const summableBuffer = buffer.subarray(2);
+
+		var sum = 0;
+
+		// sum up all of the bytes (except for the first two bytes)
+		for (let i = 0; i < summableBuffer.length; i++)
+		{
+			sum += summableBuffer[i];
+		}
+
+		// add the magic number (from novastar) to the end of the sum to generate the checksum
+		sum += 0x5555;
+
+		debug("sum: " + sum);
+
+		// split the sum into two bytes in little endian, this will be placed on the end of our command to serve as the checksum for the VX1000 to verify
+		const resultChecksumBuffer = Buffer.allocUnsafe(2);
+		resultChecksumBuffer.writeInt16LE(sum);
+		
+		return resultChecksumBuffer;
+	}
+
 	// function to build the byte sequence given the configurable layer options for enabling/disabling PIP on VX1000
 	get_pip_command_vx1000 (enabled, initialx, initialy, hwidth, vheight)
 	{
-		var output_bytes = Buffer.from([0x55,0xaa,0x00,0x00,0xfe,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x40,0x00,0x02,0x13,0x30,0x00]);
+		var bufferArray = [];
+	
+		// the initial header of the command
+		bufferArray.push(Buffer.from([0x55,0xaa,0x00,0x00,0xfe,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x40,0x00,0x02,0x13,0x30,0x00]));
 
-		var enabledBuffer = enabled ? Buffer.from([0x01]) : Buffer.from([0x00]);
+		// whether the PIP mode is enabled or not
+		bufferArray.push(enabled == '1' ? Buffer.from([0x01]) : Buffer.from([0x00]));
 
-		// add the byte for PIP enabled
-		output_bytes = Buffer.concat(output_bytes, enabledBuffer)
-
+		// WindowNo (PIP 1 layer)
+		bufferArray.push(Buffer.from([0x01]));
 		
+		// CardNo (HDMI 2.0)
+		bufferArray.push(Buffer.from([0x00]));
+
+		// Priority
+		bufferArray.push(Buffer.from([0x01]));
+
+		// Source
+		bufferArray.push(Buffer.from([0x30]));
+
+		// initial X position
+		const initialXBuffer = Buffer.allocUnsafe(4);
+		initialXBuffer.writeInt32LE(initialx)
+		bufferArray.push(initialXBuffer);
+
+		// initial Y position
+		const initialYBuffer = Buffer.allocUnsafe(4);
+		initialYBuffer.writeInt32LE(initialy)
+		bufferArray.push(initialYBuffer);
+
+		// initial width
+		const initialWidthBuffer = Buffer.allocUnsafe(4);
+		initialWidthBuffer.writeInt32LE(hwidth)
+		bufferArray.push(initialWidthBuffer);
+
+		// initial height
+		const initialHeightBuffer = Buffer.allocUnsafe(4);
+		initialHeightBuffer.writeInt32LE(vheight)
+		bufferArray.push(initialHeightBuffer);
+
+		// padding with a bunch of 0 bytes
+		bufferArray.push(Buffer.from([0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]));
+
+		// Opacity (0x00 - 0x64)
+		bufferArray.push(Buffer.from([0x64]));
+
+		// calculate checksum for the last two bytes
+		bufferArray.push(this.get_pip_command_vx1000_checksum(Buffer.concat(bufferArray)));
+
+		// combine all the buffers into a single buffer to send to the device
+		var commandBuffer = Buffer.concat(bufferArray);
+		
+		debug("resulting bytes: " + commandBuffer.toString('hex'));
+
 		// return the final byte stream to send to VX1000
-		return output_bytes
+		return commandBuffer;
 	}
 
 	actions(system) {
@@ -401,17 +472,15 @@ class instance extends instance_skel {
 					cmd = element.cmd;
 				}
 				break;
-			case 'pip_onoff_vx1000':
-				
-				var enabled = element => element.id === options.enabled;
-				var initialx = element => element.id === options.initialx;
-				var initialy = element => element.id === options.initialy;
-				var hwidth = element => element.id === options.hwidth;
-				var vheight = element => element.id === options.vheight;
+			case 'pip_onoff_vx1000':	
+				var enabled = options.enabled;
+				var initialx = options.initialx;
+				var initialy = options.initialy;
+				var hwidth = options.hwidth;
+				var vheight = options.vheight;
 
-				if (element !== undefined) {
-					cmd = get_pip_command_vx1000(enabled, initialx, initialy, hwidth, vheight);
-				}
+				cmd = this.get_pip_command_vx1000(enabled, initialx, initialy, hwidth, vheight);
+
 				break;
 			case 'change_scaling':
 				element = this.CHOICES_SCALING.find(element => element.id === options.scale);

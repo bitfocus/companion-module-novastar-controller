@@ -296,6 +296,40 @@ class instance extends instance_skel {
 			{ id: '2', label: 'Auto',    cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0xFF,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x20,0x02,0x01,0x00,0x02,0x78,0x57]) }
 		];
 
+		this.CHOICES_PIPLAYERS_VX1000 = [
+			{ id: '0', label: 'Layer 1', cmd: Buffer.from([0x00]) },
+			{ id: '1', label: 'Layer 2', cmd: Buffer.from([0x01]) },
+			{ id: '2', label: 'Layer 3', cmd: Buffer.from([0x02]) }
+		];
+
+		this.CHOICES_PIP_CARDNO_VX1000 = [
+			{ id: '0', label: 'HDMI1', cmd: Buffer.from([0x00]) },
+			{ id: '1', label: 'HDMI2', cmd: Buffer.from([0x01]) },
+			{ id: '2', label: 'DVI1', cmd: Buffer.from([0x02]) },
+			{ id: '3', label: 'DVI2', cmd: Buffer.from([0x03]) },
+			{ id: '4', label: 'SDI', cmd: Buffer.from([0x04]) },
+			{ id: '5', label: 'OPT-1', cmd: Buffer.from([0x05]) },
+			{ id: '6', label: 'OPT-2', cmd: Buffer.from([0x06]) },
+			{ id: '7', label: 'MOSAIC', cmd: Buffer.from([0x07]) }
+		];
+
+		this.CHOICES_PIP_LAYERPRIORITY_VX1000 = [
+			{ id: '0', label: 'Layer Priority 1', cmd: Buffer.from([0x00]) },
+			{ id: '1', label: 'Layer Priority 2', cmd: Buffer.from([0x01]) },
+			{ id: '2', label: 'Layer Priority 3', cmd: Buffer.from([0x02]) },
+		];
+
+		this.CHOICES_PIP_CONNECTORCODE_VX1000 = [
+			{ id: '0', label: 'HDMI1', cmd: Buffer.from([0x61]) },
+			{ id: '1', label: 'HDMI2', cmd: Buffer.from([0x62]) },
+			{ id: '2', label: 'DVI1', cmd: Buffer.from([0x69]) },
+			{ id: '3', label: 'DVI2', cmd: Buffer.from([0x6A]) },
+			{ id: '4', label: 'SDI', cmd: Buffer.from([0x30]) },
+			{ id: '5', label: 'OPT-1', cmd: Buffer.from([0xE9]) },
+			{ id: '6', label: 'OPT-2', cmd: Buffer.from([0xEA]) },
+			{ id: '7', label: 'MOSAIC', cmd: Buffer.from([0xE0]) }
+		];
+
 		this.CONFIG_MODEL = {
 			vx4s: { id: 'vx4s', label: 'VX4S', brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_VX4S, displayModes: this.CHOICES_DISPLAYMODE,     presets: this.CHOICES_PRESETS_VX4S ,piponoffs :this.CHOICES_PIP_ONOFF },
             
@@ -307,7 +341,8 @@ class instance extends instance_skel {
             
 			mctrl4k:{ id: 'mctrl4k', label: 'MCTRL4K',   brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_MCTRL4K, displayModes: this.CHOICES_DISPLAYMODE},
             
-            vx1000: { id: 'vx1000', label: 'VX1000', brightness: this.CHOICES_BRIGHTNESS_VX1000, displayModes: this.CHOICES_DISPLAYMODE_VX1000, inputs: this.CHOICES_INPUTS_VX1000, presets: this.CHOICES_PRESETS_VX1000, piponoffs: this.CHOICES_PIP_ONOFF },
+            vx1000: { id: 'vx1000', label: 'VX1000', brightness: this.CHOICES_BRIGHTNESS_VX1000, displayModes: this.CHOICES_DISPLAYMODE_VX1000, inputs: this.CHOICES_INPUTS_VX1000, presets: this.CHOICES_PRESETS_VX1000, piponoffs: this.CHOICES_PIP_ONOFF, 
+			piplayers: this.CHOICES_PIPLAYERS_VX1000, pipcardno: this.CHOICES_PIP_CARDNO_VX1000, piplayerpriority: this.CHOICES_PIP_LAYERPRIORITY_VX1000, pipconnectorcode: this.CHOICES_PIP_CONNECTORCODE_VX1000},
             
             vx600: { id: 'vx600', label: 'VX600', brightness: this.CHOICES_BRIGHTNESS_VX1000, displayModes: this.CHOICES_DISPLAYMODE_VX1000, inputs: this.CHOICES_INPUTS_VX600, presets: this.CHOICES_PRESETS_VX1000 },
             
@@ -364,7 +399,8 @@ class instance extends instance_skel {
 	}
 
 	// function to build the byte sequence given the configurable layer options for enabling/disabling PIP on VX1000
-	get_pip_command_vx1000 (enabled, initialx, initialy, hwidth, vheight)
+	get_pip_command_vx1000 (enabled, initialx, initialy, hwidth, vheight, piplayerbuffer, pipcardslotbuffer, piplayerprioritybuffer, 
+		pipconnectorcodebuffer, opacity)
 	{
 		var bufferArray = [];
 	
@@ -374,17 +410,20 @@ class instance extends instance_skel {
 		// whether the PIP mode is enabled or not
 		bufferArray.push(enabled == '1' ? Buffer.from([0x01]) : Buffer.from([0x00]));
 
-		// WindowNo (PIP 1 layer)
-		bufferArray.push(Buffer.from([0x01]));
+		// WindowNo
+		bufferArray.push(piplayerbuffer);
 		
-		// CardNo (HDMI 2.0)
-		bufferArray.push(Buffer.from([0x00]));
+		// CardNo
+		//Buffer.from([0x00])
+		bufferArray.push(pipcardslotbuffer);
 
 		// Priority
-		bufferArray.push(Buffer.from([0x01]));
+		//Buffer.from([0x01])
+		bufferArray.push(piplayerprioritybuffer);
 
 		// Source
-		bufferArray.push(Buffer.from([0x30]));
+		//Buffer.from([0x30])
+		bufferArray.push(pipconnectorcodebuffer);
 
 		// initial X position
 		const initialXBuffer = Buffer.allocUnsafe(4);
@@ -409,8 +448,11 @@ class instance extends instance_skel {
 		// padding with a bunch of 0 bytes
 		bufferArray.push(Buffer.from([0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]));
 
-		// Opacity (0x00 - 0x64)
-		bufferArray.push(Buffer.from([0x64]));
+		// Opacity (range between 0x00 - 0x64, 0 - 100 in decimal)
+		var clampedOpacity = Math.max(0, Math.min(100, opacity));
+		const initialOpacityBuffer = Buffer.allocUnsafe(1);
+		initialOpacityBuffer.writeInt8(clampedOpacity);
+		bufferArray.push(initialOpacityBuffer);
 
 		// calculate checksum for the last two bytes
 		bufferArray.push(this.get_pip_command_vx1000_checksum(Buffer.concat(bufferArray)));
@@ -478,8 +520,14 @@ class instance extends instance_skel {
 				var initialy = options.initialy;
 				var hwidth = options.hwidth;
 				var vheight = options.vheight;
+				var piplayer = this.model.piplayers.find(element => element.id === options.piplayernumber);
+				var pipcardnumber = this.model.pipcardno.find(element => element.id === options.pipcardnumber);
+				var piplayerpriority = this.model.piplayerpriority.find(element => element.id === options.piplayerpriority);
+				var pipconnectorcode = this.model.pipconnectorcode.find(element => element.id === options.pipconnectorcode);
+				var opacity = options.opacity;
 
-				cmd = this.get_pip_command_vx1000(enabled, initialx, initialy, hwidth, vheight);
+				cmd = this.get_pip_command_vx1000(enabled, initialx, initialy, hwidth, vheight, piplayer.cmd, pipcardnumber.cmd, 
+					piplayerpriority.cmd, pipconnectorcode.cmd, opacity);
 
 				break;
 			case 'change_scaling':

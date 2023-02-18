@@ -111,7 +111,41 @@ exports.getActions  = function() {
 					id: 'enabled',
 					default: '0',
 					choices: this.model.piponoffs
-				}, 
+				},
+				{
+					type: 'dropdown',
+					label: 'PIP Layer Number',
+					id: 'piplayernumber',
+					default: '0',
+					choices: this.model.piplayers
+				},
+				{
+					type: 'dropdown',
+					label: 'PIP Card Number',
+					id: 'pipcardnumber',
+					default: '0',
+					choices: this.model.pipcardno
+				},
+				{
+					type: 'dropdown',
+					label: 'PIP Layer Priority',
+					id: 'piplayerpriority',
+					default: '0',
+					choices: this.model.piplayerpriority
+				},
+				{
+					type: 'dropdown',
+					label: 'PIP Video Connector',
+					id: 'pipconnectorcode',
+					default: '0',
+					choices: this.model.pipconnectorcode
+				},
+				{
+					type: 'number',
+					label: 'Opacity (0 - 100)',
+					id: 'opacity',
+					default: '100'
+				},
 				{
 					type: 'number',
 					label: 'Initial X',

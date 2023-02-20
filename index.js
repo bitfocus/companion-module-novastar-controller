@@ -297,9 +297,9 @@ class instance extends instance_skel {
 		];
 
 		this.CHOICES_PIPLAYERS_VX1000 = [
-			{ id: '0', label: 'Layer 1', cmd: Buffer.from([0x00]) },
-			{ id: '1', label: 'Layer 2', cmd: Buffer.from([0x01]) },
-			{ id: '2', label: 'Layer 3', cmd: Buffer.from([0x02]) }
+			{ id: '0', label: 'Main Layer', cmd: Buffer.from([0x00]) },
+			{ id: '1', label: 'Layer 1', cmd: Buffer.from([0x01]) },
+			{ id: '2', label: 'Layer 2', cmd: Buffer.from([0x02]) }
 		];
 
 		this.CHOICES_PIP_CARDNO_VX1000 = [

@@ -110,35 +110,35 @@ exports.getActions  = function() {
 					label: 'On/Off',
 					id: 'enabled',
 					default: '0',
-					choices: this.model.piponoffs
+					choices: this.model.pipOnOffs
 				},
 				{
 					type: 'dropdown',
 					label: 'PIP Layer Number',
 					id: 'piplayernumber',
 					default: '0',
-					choices: this.model.piplayers
+					choices: this.model.pipLayers
 				},
 				{
 					type: 'dropdown',
 					label: 'PIP Card Number',
 					id: 'pipcardnumber',
 					default: '0',
-					choices: this.model.pipcardno
+					choices: this.model.pipCardNo
 				},
 				{
 					type: 'dropdown',
 					label: 'PIP Layer Priority',
 					id: 'piplayerpriority',
 					default: '0',
-					choices: this.model.piplayerpriority
+					choices: this.model.pipLayerPriority
 				},
 				{
 					type: 'dropdown',
 					label: 'PIP Video Connector',
 					id: 'pipconnectorcode',
 					default: '0',
-					choices: this.model.pipconnectorcode
+					choices: this.model.pipConnectorCode
 				},
 				{
 					type: 'number',

@@ -341,8 +341,8 @@ class instance extends instance_skel {
             
 			mctrl4k:{ id: 'mctrl4k', label: 'MCTRL4K',   brightness: this.CHOICES_BRIGHTNESS, inputs: this.CHOICES_INPUTS_MCTRL4K, displayModes: this.CHOICES_DISPLAYMODE},
             
-            vx1000: { id: 'vx1000', label: 'VX1000', brightness: this.CHOICES_BRIGHTNESS_VX1000, displayModes: this.CHOICES_DISPLAYMODE_VX1000, inputs: this.CHOICES_INPUTS_VX1000, presets: this.CHOICES_PRESETS_VX1000, piponoffs: this.CHOICES_PIP_ONOFF, 
-			piplayers: this.CHOICES_PIPLAYERS_VX1000, pipcardno: this.CHOICES_PIP_CARDNO_VX1000, piplayerpriority: this.CHOICES_PIP_LAYERPRIORITY_VX1000, pipconnectorcode: this.CHOICES_PIP_CONNECTORCODE_VX1000},
+            vx1000: { id: 'vx1000', label: 'VX1000', brightness: this.CHOICES_BRIGHTNESS_VX1000, displayModes: this.CHOICES_DISPLAYMODE_VX1000, inputs: this.CHOICES_INPUTS_VX1000, presets: this.CHOICES_PRESETS_VX1000, pipOnOffs: this.CHOICES_PIP_ONOFF, 
+			pipLayers: this.CHOICES_PIPLAYERS_VX1000, pipCardNo: this.CHOICES_PIP_CARDNO_VX1000, pipLayerPriority: this.CHOICES_PIP_LAYERPRIORITY_VX1000, pipConnectorCode: this.CHOICES_PIP_CONNECTORCODE_VX1000},
             
             vx600: { id: 'vx600', label: 'VX600', brightness: this.CHOICES_BRIGHTNESS_VX1000, displayModes: this.CHOICES_DISPLAYMODE_VX1000, inputs: this.CHOICES_INPUTS_VX600, presets: this.CHOICES_PRESETS_VX1000 },
             
@@ -373,10 +373,10 @@ class instance extends instance_skel {
 		this.actions();
 	}
 
-	get_pip_command_vx1000_checksum (buffer)
+	getPipCommandVX1000Checksum (pipCommandBuffer)
 	{
 		// we can't include the first two bytes in our checksum calculation, so we are taking a subarray excluding the first two bytes
-		const summableBuffer = buffer.subarray(2);
+		const summableBuffer = pipCommandBuffer.subarray(2);
 
 		var sum = 0;
 
@@ -389,8 +389,6 @@ class instance extends instance_skel {
 		// add the magic number (from novastar) to the end of the sum to generate the checksum
 		sum += 0x5555;
 
-		debug("sum: " + sum);
-
 		// split the sum into two bytes in little endian, this will be placed on the end of our command to serve as the checksum for the VX1000 to verify
 		const resultChecksumBuffer = Buffer.allocUnsafe(2);
 		resultChecksumBuffer.writeInt16LE(sum);
@@ -399,8 +397,8 @@ class instance extends instance_skel {
 	}
 
 	// function to build the byte sequence given the configurable layer options for enabling/disabling PIP on VX1000
-	get_pip_command_vx1000 (enabled, initialx, initialy, hwidth, vheight, piplayerbuffer, pipcardslotbuffer, piplayerprioritybuffer, 
-		pipconnectorcodebuffer, opacity)
+	getPipCommandVX1000 (enabled, initialX, initialY, hWidth, vHeight, pipLayerBuffer, pipCardSlotBuffer, pipLayerPriorityBuffer, 
+		pipConnectorCodeBuffer, opacity)
 	{
 		var bufferArray = [];
 	
@@ -410,39 +408,36 @@ class instance extends instance_skel {
 		// whether the PIP mode is enabled or not
 		bufferArray.push(enabled == '1' ? Buffer.from([0x01]) : Buffer.from([0x00]));
 
-		// WindowNo
-		bufferArray.push(piplayerbuffer);
+		// PIP layer number
+		bufferArray.push(pipLayerBuffer);
 		
 		// CardNo
-		//Buffer.from([0x00])
-		bufferArray.push(pipcardslotbuffer);
+		bufferArray.push(pipCardSlotBuffer);
 
 		// Priority
-		//Buffer.from([0x01])
-		bufferArray.push(piplayerprioritybuffer);
+		bufferArray.push(pipLayerPriorityBuffer);
 
 		// Source
-		//Buffer.from([0x30])
-		bufferArray.push(pipconnectorcodebuffer);
+		bufferArray.push(pipConnectorCodeBuffer);
 
 		// initial X position
 		const initialXBuffer = Buffer.allocUnsafe(4);
-		initialXBuffer.writeInt32LE(initialx)
+		initialXBuffer.writeInt32LE(initialX)
 		bufferArray.push(initialXBuffer);
 
 		// initial Y position
 		const initialYBuffer = Buffer.allocUnsafe(4);
-		initialYBuffer.writeInt32LE(initialy)
+		initialYBuffer.writeInt32LE(initialY)
 		bufferArray.push(initialYBuffer);
 
 		// initial width
 		const initialWidthBuffer = Buffer.allocUnsafe(4);
-		initialWidthBuffer.writeInt32LE(hwidth)
+		initialWidthBuffer.writeInt32LE(hWidth)
 		bufferArray.push(initialWidthBuffer);
 
 		// initial height
 		const initialHeightBuffer = Buffer.allocUnsafe(4);
-		initialHeightBuffer.writeInt32LE(vheight)
+		initialHeightBuffer.writeInt32LE(vHeight)
 		bufferArray.push(initialHeightBuffer);
 
 		// padding with a bunch of 0 bytes
@@ -455,12 +450,10 @@ class instance extends instance_skel {
 		bufferArray.push(initialOpacityBuffer);
 
 		// calculate checksum for the last two bytes
-		bufferArray.push(this.get_pip_command_vx1000_checksum(Buffer.concat(bufferArray)));
+		bufferArray.push(this.getPipCommandVX1000Checksum(Buffer.concat(bufferArray)));
 
 		// combine all the buffers into a single buffer to send to the device
 		var commandBuffer = Buffer.concat(bufferArray);
-		
-		debug("resulting bytes: " + commandBuffer.toString('hex'));
 
 		// return the final byte stream to send to VX1000
 		return commandBuffer;
@@ -516,18 +509,18 @@ class instance extends instance_skel {
 				break;
 			case 'pip_onoff_vx1000':	
 				var enabled = options.enabled;
-				var initialx = options.initialx;
-				var initialy = options.initialy;
-				var hwidth = options.hwidth;
-				var vheight = options.vheight;
-				var piplayer = this.model.piplayers.find(element => element.id === options.piplayernumber);
-				var pipcardnumber = this.model.pipcardno.find(element => element.id === options.pipcardnumber);
-				var piplayerpriority = this.model.piplayerpriority.find(element => element.id === options.piplayerpriority);
-				var pipconnectorcode = this.model.pipconnectorcode.find(element => element.id === options.pipconnectorcode);
+				var initialX = options.initialx;
+				var initialY = options.initialy;
+				var hWidth = options.hwidth;
+				var vHeight = options.vheight;
+				var pipLayer = this.model.pipLayers.find(element => element.id === options.piplayernumber);
+				var pipCardNumber = this.model.pipCardNo.find(element => element.id === options.pipcardnumber);
+				var pipLayerPriority = this.model.pipLayerPriority.find(element => element.id === options.piplayerpriority);
+				var pipConnectorCode = this.model.pipConnectorCode.find(element => element.id === options.pipconnectorcode);
 				var opacity = options.opacity;
 
-				cmd = this.get_pip_command_vx1000(enabled, initialx, initialy, hwidth, vheight, piplayer.cmd, pipcardnumber.cmd, 
-					piplayerpriority.cmd, pipconnectorcode.cmd, opacity);
+				cmd = this.getPipCommandVX1000(enabled, initialX, initialY, hWidth, vHeight, pipLayer.cmd, pipCardNumber.cmd, 
+					pipLayerPriority.cmd, pipConnectorCode.cmd, opacity);
 
 				break;
 			case 'change_scaling':

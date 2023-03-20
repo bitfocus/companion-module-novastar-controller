@@ -11,7 +11,8 @@ This module will allow you to control the following NovaStar products: MCTRL4K, 
 * Change Display Mode
 * Change Inputs
 * change working mode on VX6S AND J6 
-* Recall Presets on VX6s, UHD Jr, VX600, VX16s, VX1000, J6 
+* Recall Presets on VX6s, UHD Jr, VX600, VX16s, VX1000, J6
+* Change main and PIP layer settings for VX1000
 
 **VX4S, VX6S, NovaProHD, NovaProHDJr only:**
 * PIP On/Off

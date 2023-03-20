@@ -1,14 +1,13 @@
 // NovaStar-Controller
-const tcp           = require('../../tcp');
-const instance_skel = require('../../instance_skel');
-var actions         = require('./actions');
+const { InstanceBase, TCPHelper, runEntrypoint } = require('@companion-module/base')
+const actions = require('./actions');
 let debug;
 let log;
 
-class instance extends instance_skel {
+class instance extends InstanceBase {
 
-	constructor(system,id,config) {
-		super(system,id,config)
+	constructor(internal) {
+		super(internal);
 
 		Object.assign(this, {
 			...actions
@@ -369,8 +368,6 @@ class instance extends instance_skel {
 			this.config.modelID = 'vx4s';
 			this.model = this.CONFIG_MODEL['vx4s'];
 		}
-
-		this.actions();
 	}
 
 	getPipCommandVX1000Checksum (pipCommandBuffer)
@@ -459,8 +456,9 @@ class instance extends instance_skel {
 		return commandBuffer;
 	}
 
-	actions(system) {
-		this.setActions(this.getActions());
+	updateActions() {
+		this.log('debug', "starting up module....");
+		this.setActionDefinitions(this.getActions());
 	}
 
 	action(action) {
@@ -551,7 +549,7 @@ class instance extends instance_skel {
 	}
 
 	// Return config fields for web config
-	config_fields() {
+	getConfigFields() {
 
 		return [
 			{
@@ -581,7 +579,7 @@ class instance extends instance_skel {
 	}
 
 	// When module gets deleted
-	destroy() {
+	async destroy() {
 		if (this.socket !== undefined) {
 			this.socket.destroy();
 		}
@@ -589,7 +587,7 @@ class instance extends instance_skel {
 		debug('destroy', this.id);
 	}
 
-	init() {
+	async init(config) {
 		debug = this.debug;
 		log = this.log;
 
@@ -600,6 +598,7 @@ class instance extends instance_skel {
 		if (this.socket !== undefined) {
 			this.socket.destroy();
 			delete this.socket;
+			this.updateStatus(InstanceStatus.Disconnected)
 		}
 
 		if (this.config.port === undefined) {
@@ -607,7 +606,9 @@ class instance extends instance_skel {
 		}
 
 		if (this.config.host) {
-			this.socket = new tcp(this.config.host, this.config.port);
+			this.socket = new TCPHelper(this.config.host, this.config.port);
+
+			this.updateStatus(InstanceStatus.Connecting)
 
 			this.socket.on('status_change', (status, message) => {
 				this.status(status, message);
@@ -635,7 +636,7 @@ class instance extends instance_skel {
 		}
 	}
 
-	updateConfig(config) {
+	configUpdated(config) {
 		var resetConnection = false;
 
 		if (this.config.host != config.host)
@@ -652,5 +653,7 @@ class instance extends instance_skel {
 		}
 	}
 }
+
+runEntrypoint(instance);
 
 exports = module.exports = instance;

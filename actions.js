@@ -1,4 +1,4 @@
-exports.getActions  = function() {
+exports.getActions = function() {
 
 	let actions = {};
 
@@ -7,11 +7,11 @@ exports.getActions  = function() {
 	// VX6s, VX4S, NovaProHD, MCTRL4k, NovaPro UHD, NovaPro UHD Jr , VX1000, VX 600, VX16S
     if (this.config.modelID == 'vx4s' || this.config.modelID == 'vx6s' ||this.config.modelID == 'MCTRL4k' || this.config.modelID == 'novaProHD'|| this.config.modelID == 'novaProUHD' || this.config.modelID == 'novaProUHDJr' || this.config.modelID == 'vx1000'|| this.config.modelID == 'vx600'|| this.config.modelID == 'vx16s')
 	actions['change_brightness'] = {
-		label: 'Change Brightness',
+		name: 'Change Brightness',
 		options: [
 			{
 				type: 'dropdown',
-				label: 'Brightness',
+				name: 'Brightness',
 				id: 'brightness',
 				default: '0',
 				choices: this.model.brightness
@@ -23,11 +23,11 @@ exports.getActions  = function() {
 	
     if (this.config.modelID == 'vx4s' || this.config.modelID == 'vx6s' ||this.config.modelID == 'MCTRL4k'||this.config.modelID == 'vx1000' || this.config.modelID == 'novaProHD'|| this.config.modelID == 'vx600')
         actions['change_input'] = {
-		label: 'Change Input',
+		name: 'Change Input',
 		options: [
 			{
 				type: 'dropdown',
-				label: 'Input',
+				name: 'Input',
 				id: 'input',
 				default: '0',
 				choices: this.model.inputs
@@ -38,11 +38,11 @@ exports.getActions  = function() {
 //Change Test patterns
 	// All models
 	actions['change_test_pattern'] = {
-		label: 'Change Test Patterns',
+		name: 'Change Test Patterns',
 		options: [
 			{
 				type: 'dropdown',
-				label: 'Test Patterns',
+				name: 'Test Patterns',
 				id: 'pattern',
 				default: '0',
 				choices: this.CHOICES_TESTPATTERNS
@@ -53,11 +53,11 @@ exports.getActions  = function() {
 //Change Display mode
 	// all models
 	actions['change_display_mode'] = {
-		label: 'Change Display Mode',
+		name: 'Change Display Mode',
 		options: [
 			{
 				type: 'dropdown',
-				label: 'Display Mode',
+				name: 'Display Mode',
 				id: 'display_mode',
 				default: '0',
 				choices: this.model.displayModes
@@ -69,11 +69,11 @@ exports.getActions  = function() {
 	// VX6s & J6
 	if (this.config.modelID == 'vx6s' || this.config.modelID == 'j6') {
 		actions['change_working_mode'] = {
-			label: 'Change Working Mode',
+			name: 'Change Working Mode',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Working Mode',
+					name: 'Working Mode',
 					id: 'working_mode',
 					default: '0',
 					choices: this.model.workingModes
@@ -86,11 +86,11 @@ exports.getActions  = function() {
 	// VX4S, NovaProHD
 	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProHD') {
 		actions['pip_onoff'] = {
-			label: 'PIP On/Off',
+			name: 'PIP On/Off',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'On/Off',
+					name: 'On/Off',
 					id: 'value',
 					default: '0',
 					choices: this.model.piponoffs
@@ -103,70 +103,70 @@ exports.getActions  = function() {
 	// VX1000 only
 	if (this.config.modelID == 'vx1000') {
 		actions['pip_onoff_vx1000'] = {
-			label: 'PIP On/Off VX1000',
+			name: 'PIP On/Off VX1000',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'On/Off',
+					name: 'On/Off',
 					id: 'enabled',
 					default: '0',
 					choices: this.model.pipOnOffs
 				},
 				{
 					type: 'dropdown',
-					label: 'PIP Layer Number',
+					name: 'PIP Layer Number',
 					id: 'piplayernumber',
 					default: '0',
 					choices: this.model.pipLayers
 				},
 				{
 					type: 'dropdown',
-					label: 'PIP Card Number',
+					name: 'PIP Card Number',
 					id: 'pipcardnumber',
 					default: '0',
 					choices: this.model.pipCardNo
 				},
 				{
 					type: 'dropdown',
-					label: 'PIP Layer Priority',
+					name: 'PIP Layer Priority',
 					id: 'piplayerpriority',
 					default: '0',
 					choices: this.model.pipLayerPriority
 				},
 				{
 					type: 'dropdown',
-					label: 'PIP Video Connector',
+					name: 'PIP Video Connector',
 					id: 'pipconnectorcode',
 					default: '0',
 					choices: this.model.pipConnectorCode
 				},
 				{
 					type: 'number',
-					label: 'Opacity (0 - 100)',
+					name: 'Opacity (0 - 100)',
 					id: 'opacity',
 					default: '100'
 				},
 				{
 					type: 'number',
-					label: 'Initial X',
+					name: 'Initial X',
 					id: 'initialx',
 					default: '550'
 				},
 				{
 					type: 'number',
-					label: 'Initial Y',
+					name: 'Initial Y',
 					id: 'initialy',
 					default: '0'
 				},
 				{
 					type: 'number',
-					label: 'H Width',
+					name: 'H Width',
 					id: 'hwidth',
 					default: '1307'
 				},
 				{
 					type: 'number',
-					label: 'V Height',
+					name: 'V Height',
 					id: 'vheight',
 					default: '640'
 				} 
@@ -178,11 +178,11 @@ exports.getActions  = function() {
 	// VX4S, NovaProHD
 	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProHD') {
 		actions['change_scaling'] = {
-			label: 'Change Scaling',
+			name: 'Change Scaling',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Scale',
+					name: 'Scale',
 					id: 'scale',
 					default: '0',
 					choices: this.CHOICES_SCALING
@@ -195,11 +195,11 @@ exports.getActions  = function() {
     //VX4S, NovaPro UHD Jr,vx1000
 	if (this.config.modelID == 'vx4s' || this.config.modelID == 'novaProUHDJr'|| this.config.modelID == 'vx1000'|| this.config.modelID == 'vx600'|| this.config.modelID == 'vx16s' || this.config.modelID == 'j6') {
 		actions['load_preset'] = {
-			label: 'Recall Preset',
+			name: 'Recall Preset',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Preset',
+					name: 'Preset',
 					id: 'preset',
 					default: '0',
 					choices: this.model.presets
@@ -211,11 +211,11 @@ exports.getActions  = function() {
 	// VX6s
 	if (this.config.modelID == 'vx6s') {
 		actions['load_preset'] = {
-			label: 'Load Preset to Preview',
+			name: 'Load Preset to Preview',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Preset',
+					name: 'Preset',
 					id: 'preset',
 					default: '0',
 					choices: this.model.presets
@@ -224,7 +224,7 @@ exports.getActions  = function() {
 		};
 
 		actions['take'] = {
-			label: 'Take Preview to Program'
+			name: 'Take Preview to Program'
 		};
 	}
 

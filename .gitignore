@@ -1,2 +1,4 @@
 /pkg
 /pkg.tgz
+/.vscode
+/node_modules

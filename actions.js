@@ -1,7 +1,7 @@
 const { InstanceBase, TCPHelper } = require('@companion-module/base')
 const nova_config = require('./config');
 
-// calcualtes the checksum that is required when sending a bytestream for layer configuration to the VX1000
+// calculates the checksum that is required when sending a bytestream for layer configuration to the VX1000
 function getLayerUpdateCommandVX1000Checksum (pipCommandBuffer)
 {
 	// we can't include the first two bytes in our checksum calculation, so we are taking a subarray excluding the first two bytes
@@ -304,7 +304,7 @@ exports.getActions = function(instance) {
 				var connectorCode = instance.model.connectorCode.find(element => element.id === event.options.connectorCode);
 				var opacity = event.options.opacity;
 
-				cmd = getLayerUpdateCommandVX1000(enabled, initialX, initialY, hWidth, vHeight, layer.cmd, cardNumber.cmd, 
+				var cmd = getLayerUpdateCommandVX1000(enabled, initialX, initialY, hWidth, vHeight, layer.cmd, cardNumber.cmd, 
 					layerPriority.cmd, connectorCode.cmd, opacity);
 
 				instance.socket.send(cmd);
@@ -349,7 +349,7 @@ exports.getActions = function(instance) {
 				}
 			],
 			callback: async (event) => {
-				element = instance.model.presets.find(element => element.id === event.options.preset);
+				let element = instance.model.presets.find(element => element.id === event.options.preset);
 
 				instance.socket.send(element.cmd);
 			}
@@ -370,7 +370,7 @@ exports.getActions = function(instance) {
 				}
 			], 
 			callback: async (event) => {
-				element = instance.model.presets.find(element => element.id === event.options.preset);
+				let element = instance.model.presets.find(element => element.id === event.options.preset);
 
 				instance.socket.send(element.cmd);
 			}
@@ -380,12 +380,12 @@ exports.getActions = function(instance) {
 			name: 'Take Preview to Program',
 			options: [],
 			callback: async (event) => {
-				cmd = Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x2D,0x00,0x00,0x13,0x01,0x00,0x00,0x95,0x56]);
+				var cmd = Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x2D,0x00,0x00,0x13,0x01,0x00,0x00,0x95,0x56]);
 
 				instance.socket.send(cmd);
 			}
 		};
 	}
 
-	return actions
+	return actions;
 }

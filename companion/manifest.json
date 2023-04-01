@@ -3,7 +3,7 @@
 	"name": "novastar-controller",
 	"shortname": "novastar",
 	"description": "Companion module for Novastar controllers",
-	"version": "0.0.0",
+	"version": "2.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-novastar-controller.git",
 	"bugs": "https://github.com/bitfocus/companion-module-novastar-controller/issues",
@@ -13,28 +13,14 @@
 			"email": "Ritesh@reddotlogics.com"
 		}
 	],
-	"legacyIds": [
-		"novastar-vx4s"
-	],
+	"legacyIds": ["novastar-vx4s"],
 	"runtime": {
 		"type": "node18",
 		"api": "nodejs-ipc",
-		"apiVersion": "0.0.0",
+		"apiVersion": "1.0.0",
 		"entrypoint": "../index.js"
 	},
 	"manufacturer": "Novastar",
-	"products": [
-		"MCTRL4K",
-		"VX4S",
-		"VX6S",
-		"NovaPro HD",
-		"NovaPro UHD Jr",
-		"VX1000",
-		"VX600",
-		"VX16S",
-		"J6"
-	],
-	"keywords": [
-		"LED Processing"
-	]
+	"products": ["MCTRL4K", "VX4S", "VX6S", "NovaPro HD", "NovaPro UHD Jr", "VX1000", "VX600", "VX16S", "J6"],
+	"keywords": ["LED Processing"]
 }

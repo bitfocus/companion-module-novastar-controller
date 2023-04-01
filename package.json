@@ -9,8 +9,7 @@
 	"homepage": "https://github.com/bitfocus/companion-module-novastar-controller#readme",
 	"dependencies": {
 		"@companion-module/base": "~1.0",
-		"@companion-module/tools": "^1.2.0",
-		"yarn": "^1.22.19"
+		"@companion-module/tools": "^1.2.0"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json"
 }

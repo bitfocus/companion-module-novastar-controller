@@ -104,7 +104,7 @@ function getLayerUpdateCommandVX1000(
 
 // the instance is passed in from index.js, so that we have access to the main instance for the TCP socket, etc.
 exports.getActions = function (instance) {
-	let actions = {}
+	let actions = {};
 
 	// Brightness
 	// VX6s, VX4S, NovaProHD, MCTRL4k, NovaPro UHD, NovaPro UHD Jr , VX1000, VX 600, VX16S
@@ -135,7 +135,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(element.cmd);
 			},
-		}
+		};
 
 	// Change Input
 	// VX6s, VX4S, NovaProHD, MCTRL4k, VX1000, VX600
@@ -164,7 +164,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(element.cmd);
 			},
-		}
+		};
 
 	// Change Test patterns
 	// All models
@@ -184,7 +184,7 @@ exports.getActions = function (instance) {
 
 			instance.socket.send(element.cmd);
 		},
-	}
+	};
 
 	// Change Display mode
 	// all models
@@ -204,7 +204,7 @@ exports.getActions = function (instance) {
 
 			instance.socket.send(element.cmd);
 		},
-	}
+	};
 
 	// Working mode
 	// VX6s & J6
@@ -225,7 +225,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(element.cmd);
 			},
-		}
+		};
 	}
 
 	// PIP
@@ -247,7 +247,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(element.cmd);
 			},
-		}
+		};
 	}
 
 	// Layer update / configuration (VX1000 only)
@@ -367,7 +367,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(cmd);
 			},
-		}
+		};
 	}
 
 	// Scaling
@@ -389,7 +389,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(element.cmd);
 			},
-		}
+		};
 	}
 
 	// LOAD PRESETS
@@ -418,7 +418,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(element.cmd);
 			},
-		}
+		};
 	}
 
 	// VX6s
@@ -439,7 +439,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(element.cmd);
 			},
-		}
+		};
 
 		actions['take'] = {
 			name: 'Take Preview to Program',
@@ -452,7 +452,7 @@ exports.getActions = function (instance) {
 
 				instance.socket.send(cmd);
 			},
-		}
+		};
 	}
 
 	return actions;

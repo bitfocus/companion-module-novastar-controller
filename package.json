@@ -1,7 +1,6 @@
 {
-       "name": "novastar-controller",
+	"name": "novastar-controller",
 	"version": "2.0.0",
-	"api_version": "1.0.0",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"format": "prettier -w ."

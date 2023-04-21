@@ -1,31 +1,31 @@
 // NovaStar-Controller
-const { InstanceBase, TCPHelper, runEntrypoint } = require('@companion-module/base');
-const actions = require('./actions');
-const nova_config = require('./choices');
+const { InstanceBase, TCPHelper, runEntrypoint } = require('@companion-module/base')
+const actions = require('./actions')
+const nova_config = require('./choices')
 
 class NovaStarInstance extends InstanceBase {
 	constructor(internal) {
-		super(internal);
+		super(internal)
 
 		// map the choices model to the internal config data object
-		this.CHOICES_MODEL = Object.values(nova_config.CONFIG_MODEL);
+		this.CHOICES_MODEL = Object.values(nova_config.CONFIG_MODEL)
 
 		// Sort config model alphabetically
 		this.CHOICES_MODEL.sort(function (a, b) {
-			let x = a.label.toLowerCase();
-			let y = b.label.toLowerCase();
+			let x = a.label.toLowerCase()
+			let y = b.label.toLowerCase()
 			if (x < y) {
-				return -1;
+				return -1
 			}
 			if (x > y) {
-				return 1;
+				return 1
 			}
-			return 0;
+			return 0
 		})
 	}
 
 	updateActions() {
-		this.setActionDefinitions(actions.getActions(this));
+		this.setActionDefinitions(actions.getActions(this))
 	}
 
 	// Return config fields for web config
@@ -61,85 +61,85 @@ class NovaStarInstance extends InstanceBase {
 	// When module gets deleted
 	async destroy() {
 		if (this.socket !== undefined) {
-			this.socket.destroy();
+			this.socket.destroy()
 		}
 
-		this.log('destroying module: ', this.id);
+		this.log('destroying module: ', this.id)
 	}
 
 	async init(config) {
-		this.config = config;
+		this.config = config
 
 		if (this.config.modelID !== undefined) {
-			this.model = nova_config.CONFIG_MODEL[this.config.modelID];
+			this.model = nova_config.CONFIG_MODEL[this.config.modelID]
 		} else {
-			this.config.modelID = 'vx4s';
-			this.model = nova_config.CONFIG_MODEL['vx4s'];
+			this.config.modelID = 'vx4s'
+			this.model = nova_config.CONFIG_MODEL['vx4s']
 		}
 
 		// this is not called by Companion directly, so we need to call this to load the actions into Companion
-		this.updateActions();
+		this.updateActions()
 
 		// start up the TCP socket and attmept to get connected to the NovaStar device
-		this.initTCP();
+		this.initTCP()
 	}
 
 	initTCP() {
 		if (this.socket !== undefined) {
 			// clean up the socket and keep Companion connection status up to date in the event that the socket ceases to exist
-			this.socket.destroy();
-			delete this.socket;
-			this.updateStatus('disconnected');
+			this.socket.destroy()
+			delete this.socket
+			this.updateStatus('disconnected')
 		}
 
 		if (this.config.port === undefined) {
 			// use TCP port 5200 by default
-			this.config.port = 5200;
+			this.config.port = 5200
 		}
 
 		if (this.config.host) {
 			// create a TCPHelper instance to use as our TCP socket
-			this.socket = new TCPHelper(this.config.host, this.config.port);
+			this.socket = new TCPHelper(this.config.host, this.config.port)
 
-			this.updateStatus('connecting');
+			this.updateStatus('connecting')
 
 			this.socket.on('status_change', (status, message) => {
-				this.log('debug', message);
-			});
+				this.log('debug', message)
+			})
 
 			this.socket.on('error', (err) => {
 				// make sure that we log and update Companion connection status for a network failure
-				this.log('Network error', err);
-				this.log('error', 'Network error: ' + err.message);
-				this.updateStatus('connection_failure');
-			});
+				this.log('Network error', err)
+				this.log('error', 'Network error: ' + err.message)
+				this.updateStatus('connection_failure')
+			})
 
 			this.socket.on('connect', () => {
 				let cmd = Buffer.from([
 					0x55, 0xaa, 0x00, 0x00, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00,
 					0x57, 0x56,
-				]);
-				this.socket.send(cmd);
-				this.log('debug', 'Connected');
-				this.updateStatus('ok');
+				])
+				this.socket.send(cmd)
+				this.log('debug', 'Connected')
+				this.updateStatus('ok')
 			})
 		}
 	}
 
 	configUpdated(config) {
 		// handle if the connection needs to be reset (ex. if the user changes the IP address, and we need to re-connect the socket to the new address)
-		let resetConnection = false;
+		let resetConnection = false
 
 		if (this.config.host != config.host) {
-			resetConnection = true;
+			resetConnection = true
 		}
 
-		this.config = config;
+		this.config = config
 
 		if (resetConnection === true || this.socket === undefined) {
-			this.initTCP();
+			this.initTCP()
 		}
 	}
 }
 
-runEntrypoint(NovaStarInstance, []);
+runEntrypoint(NovaStarInstance, [])

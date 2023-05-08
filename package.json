@@ -1,12 +1,11 @@
 {
 	"name": "novastar-controller",
 	"version": "2.0.0",
+	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"format": "prettier -w ."
 	},
-	"author": "Ritesh Patel <Ritesh@reddotlogics.com>",
-	"homepage": "https://github.com/bitfocus/companion-module-novastar-controller#readme",
 	"dependencies": {
 		"@companion-module/base": "~1.0",
 		"@companion-module/tools": "^1.2.0"

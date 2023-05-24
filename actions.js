@@ -1,4 +1,3 @@
-const { InstanceBase, TCPHelper } = require('@companion-module/base');
 const nova_config = require('./choices');
 
 // calculates the checksum that is required when sending a bytestream for layer configuration to the VX1000

@@ -110,7 +110,7 @@ exports.getActions = function (instance) {
 	if (
 		instance.config.modelID == 'vx4s' ||
 		instance.config.modelID == 'vx6s' ||
-		instance.config.modelID == 'MCTRL4k' ||
+		instance.config.modelID == 'mctrl4k' ||
 		instance.config.modelID == 'novaProHD' ||
 		instance.config.modelID == 'novaProUHD' ||
 		instance.config.modelID == 'novaProUHDJr' ||
@@ -142,7 +142,7 @@ exports.getActions = function (instance) {
 	if (
 		instance.config.modelID == 'vx4s' ||
 		instance.config.modelID == 'vx6s' ||
-		instance.config.modelID == 'MCTRL4k' ||
+		instance.config.modelID == 'mctrl4k' ||
 		instance.config.modelID == 'vx1000' ||
 		instance.config.modelID == 'novaProHD' ||
 		instance.config.modelID == 'vx600'
@@ -333,7 +333,7 @@ exports.getActions = function (instance) {
 				let opacity = event.options.opacity;
 
 				const MAX_INT32 = Math.pow(2, 32) - 1;
-				
+
 				// truncate to int and clamp parameter ranges, clamp to 32 bit integer range
 				initialX = Math.trunc(initialX);
 				initialX = Math.max(0, Math.min(initialX, MAX_INT32));

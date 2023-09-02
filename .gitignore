@@ -1,4 +1,9 @@
+node_modules/
+.eslintrc
+.DS_Store
 /pkg
 /pkg.tgz
-/.vscode
-/node_modules
+DEBUG-INSPECT
+DEBUG-PACKAGED
+DEBUG-PACKAGE
+DEBUG-INSPECTx

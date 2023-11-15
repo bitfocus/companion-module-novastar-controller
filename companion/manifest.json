@@ -3,11 +3,15 @@
 	"name": "novastar-controller",
 	"shortname": "novastar",
 	"description": "Companion module for Novastar controllers",
-	"version": "2.0.0",
+	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-novastar-controller.git",
 	"bugs": "https://github.com/bitfocus/companion-module-novastar-controller/issues",
 	"maintainers": [
+		{
+			"name": "John A Knight, Jr",
+			"email": "istnv@istnv.com"
+		},
 		{
 			"name": "Ritesh Patel",
 			"email": "Ritesh@reddotlogics.com"
@@ -17,7 +21,7 @@
 	"runtime": {
 		"type": "node18",
 		"api": "nodejs-ipc",
-		"apiVersion": "1.0.0",
+		"apiVersion": "0.0.0",
 		"entrypoint": "../index.js"
 	},
 	"manufacturer": "Novastar",

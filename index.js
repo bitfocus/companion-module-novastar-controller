@@ -126,8 +126,9 @@ class NovaStarInstance extends InstanceBase {
 		}
 	}
 
-	configUpdated(config) {
-		// handle if the connection needs to be reset (ex. if the user changes the IP address, and we need to re-connect the socket to the new address)
+	async configUpdated(config) {
+		// handle if the connection needs to be reset (ex. if the user changes the IP address,
+		// and we need to re-connect the socket to the new address)
 		let resetConnection = false
 
 		if (this.config.host != config.host) {
@@ -135,6 +136,9 @@ class NovaStarInstance extends InstanceBase {
 		}
 
 		this.config = config
+
+		// re-build actions for current model
+		this.updateActions()
 
 		if (resetConnection === true || this.socket === undefined) {
 			this.initTCP()

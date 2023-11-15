@@ -22,3 +22,9 @@ This module will allow you to control the following NovaStar products: MCTRL4K, 
 - PIP On/Off
 - Change Scaling
 - Recall Presets
+
+
+---
+Contributions for development and maintenance of this open source module are always welcome
+https://github.com/sponsors/istnv
+---

@@ -10,6 +10,7 @@ This module will allow you to control the following NovaStar products: MCTRL4K, 
 **Available actions:**
 
 - Change Brightness
+- Set Brightness (0.5% - 100%)
 - Change Test Patterns
 - Change Display Mode
 - Change Inputs
@@ -23,8 +24,9 @@ This module will allow you to control the following NovaStar products: MCTRL4K, 
 - Change Scaling
 - Recall Presets
 
-
 ---
+
 Contributions for development and maintenance of this open source module are always welcome
 https://github.com/sponsors/istnv
+
 ---

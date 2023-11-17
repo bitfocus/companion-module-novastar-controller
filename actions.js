@@ -1,25 +1,25 @@
-const nova_config = require('./choices');
+const nova_config = require('./choices')
 
 // calculates the checksum that is required when sending a bytestream for layer configuration to the VX1000
 function getLayerUpdateCommandVX1000Checksum(pipCommandBuffer) {
 	// we can't include the first two bytes in our checksum calculation, so we are taking a subarray excluding the first two bytes
-	const summableBuffer = pipCommandBuffer.subarray(2);
+	const summableBuffer = pipCommandBuffer.subarray(2)
 
-	let sum = 0;
+	let sum = 0
 
 	// sum up all of the bytes (except for the first two bytes)
 	for (let i = 0; i < summableBuffer.length; i++) {
-		sum += summableBuffer[i];
+		sum += summableBuffer[i]
 	}
 
 	// add the magic number (from novastar) to the end of the sum to generate the checksum
-	sum += 0x5555;
+	sum += 0x5555
 
 	// split the sum into two bytes in little endian, this will be placed on the end of our command to serve as the checksum for the VX1000 to verify
-	const resultChecksumBuffer = Buffer.allocUnsafe(2);
-	resultChecksumBuffer.writeInt16LE(sum);
+	const resultChecksumBuffer = Buffer.allocUnsafe(2)
+	resultChecksumBuffer.writeInt16LE(sum)
 
-	return resultChecksumBuffer;
+	return resultChecksumBuffer
 }
 
 // function to build the byte sequence given the configurable layer options for configuring layers on VX1000
@@ -33,77 +33,92 @@ function getLayerUpdateCommandVX1000(
 	cardSlotBuffer,
 	layerPriorityBuffer,
 	connectorCodeBuffer,
-	opacity
+	opacity,
 ) {
-	let bufferArray = [];
+	let bufferArray = []
 
 	// the initial header of the command
 	bufferArray.push(
 		Buffer.from([
 			0x55, 0xaa, 0x00, 0x00, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x40, 0x00, 0x02, 0x13, 0x30, 0x00,
-		])
-	);
+		]),
+	)
 
 	// whether the layer is enabled or not
-	bufferArray.push(enabled == '1' ? Buffer.from([0x01]) : Buffer.from([0x00]));
+	bufferArray.push(enabled == '1' ? Buffer.from([0x01]) : Buffer.from([0x00]))
 
 	// layer number
-	bufferArray.push(layerBuffer);
+	bufferArray.push(layerBuffer)
 
 	// CardNo
-	bufferArray.push(cardSlotBuffer);
+	bufferArray.push(cardSlotBuffer)
 
 	// Priority
-	bufferArray.push(layerPriorityBuffer);
+	bufferArray.push(layerPriorityBuffer)
 
 	// Source (connector code)
-	bufferArray.push(connectorCodeBuffer);
+	bufferArray.push(connectorCodeBuffer)
 
 	// initial X position
-	const initialXBuffer = Buffer.allocUnsafe(4);
-	initialXBuffer.writeInt32LE(initialX);
-	bufferArray.push(initialXBuffer);
+	const initialXBuffer = Buffer.allocUnsafe(4)
+	initialXBuffer.writeInt32LE(initialX)
+	bufferArray.push(initialXBuffer)
 
 	// initial Y position
-	const initialYBuffer = Buffer.allocUnsafe(4);
-	initialYBuffer.writeInt32LE(initialY);
-	bufferArray.push(initialYBuffer);
+	const initialYBuffer = Buffer.allocUnsafe(4)
+	initialYBuffer.writeInt32LE(initialY)
+	bufferArray.push(initialYBuffer)
 
 	// initial width
-	const initialWidthBuffer = Buffer.allocUnsafe(4);
-	initialWidthBuffer.writeInt32LE(hWidth);
-	bufferArray.push(initialWidthBuffer);
+	const initialWidthBuffer = Buffer.allocUnsafe(4)
+	initialWidthBuffer.writeInt32LE(hWidth)
+	bufferArray.push(initialWidthBuffer)
 
 	// initial height
-	const initialHeightBuffer = Buffer.allocUnsafe(4);
-	initialHeightBuffer.writeInt32LE(vHeight);
-	bufferArray.push(initialHeightBuffer);
+	const initialHeightBuffer = Buffer.allocUnsafe(4)
+	initialHeightBuffer.writeInt32LE(vHeight)
+	bufferArray.push(initialHeightBuffer)
 
 	// padding with a bunch of 0 bytes
 	bufferArray.push(
 		Buffer.from([
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		])
-	);
+		]),
+	)
 
-	const initialOpacityBuffer = Buffer.allocUnsafe(1);
-	initialOpacityBuffer.writeInt8(opacity);
-	bufferArray.push(initialOpacityBuffer);
+	const initialOpacityBuffer = Buffer.allocUnsafe(1)
+	initialOpacityBuffer.writeInt8(opacity)
+	bufferArray.push(initialOpacityBuffer)
 
 	// calculate checksum for the last two bytes
-	bufferArray.push(getLayerUpdateCommandVX1000Checksum(Buffer.concat(bufferArray)));
+	bufferArray.push(getLayerUpdateCommandVX1000Checksum(Buffer.concat(bufferArray)))
 
 	// combine all the buffers into a single buffer to send to the device
-	let commandBuffer = Buffer.concat(bufferArray);
+	let commandBuffer = Buffer.concat(bufferArray)
 
 	// return the final byte stream to send to VX1000
-	return commandBuffer;
+	return commandBuffer
+}
+
+function makeBrightnessCommand(pct) {
+	let val = Math.round(255 * (pct / 100))
+	let buf = []
+
+	buf.push(
+		Buffer.from([
+			0x55, 0xaa, 0x00, 0x00, 0xfe, 0xff, 0x01, 0xff, 0xff, 0xff, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x01, 0x00, val,
+		]),
+	)
+	//buf.push(val)
+	buf.push(getLayerUpdateCommandVX1000Checksum(Buffer.concat(buf)))
+
+	return Buffer.concat(buf)
 }
 
 // the instance is passed in from index.js, so that we have access to the main instance for the TCP socket, etc.
 exports.getActions = function (instance) {
-	let actions = {};
+	let actions = {}
 
 	// Brightness
 	// VX6s, VX4S, NovaProHD, MCTRL4k, NovaPro UHD, NovaPro UHD Jr , VX1000, VX 600, VX16S
@@ -117,7 +132,7 @@ exports.getActions = function (instance) {
 		instance.config.modelID == 'vx1000' ||
 		instance.config.modelID == 'vx600' ||
 		instance.config.modelID == 'vx16s'
-	)
+	) {
 		actions['change_brightness'] = {
 			name: 'Change Brightness',
 			options: [
@@ -130,11 +145,43 @@ exports.getActions = function (instance) {
 				},
 			],
 			callback: async (event) => {
-				let element = nova_config.CHOICES_BRIGHTNESS.find((element) => element.id === event.options.brightness);
+				let element = nova_config.CHOICES_BRIGHTNESS.find((element) => element.id === event.options.brightness)
 
-				instance.socket.send(element.cmd);
+				instance.socket.send(element.cmd)
 			},
-		};
+		}
+		actions['set_brightness'] = {
+			name: 'Set Brightness',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Set / Adjust',
+					tooltip: 'WIP: Adjust needs feedbacks before\n it can be implemented',
+					id: 'mode',
+					default: 'S',
+					choices: [
+						// { id: 'A', label: 'Adjust +/- Value' },
+						{ id: 'S', label: 'Set Direct Value' },
+					],
+				},
+				{
+					type: 'textinput',
+					label: 'Value (%)',
+					id: 'value',
+					default: 0,
+					useVariables: true,
+				},
+			],
+			callback: async (event, context) => {
+				let val = parseFloat(await context.parseVariablesInString(event.options.value))
+				/*
+					Adjust value based on dynamic variable here
+				*/
+				let cmd = makeBrightnessCommand(val)
+				instance.socket.send(cmd)
+			},
+		}
+	}
 
 	// Change Input
 	// VX6s, VX4S, NovaProHD, MCTRL4k, VX1000, VX600
@@ -152,18 +199,18 @@ exports.getActions = function (instance) {
 			options: [
 				{
 					type: 'dropdown',
-					name: 'Input',
+					label: 'Input',
 					id: 'input',
 					default: '0',
 					choices: instance.model.inputs,
 				},
 			],
 			callback: async (event) => {
-				let element = instance.model.inputs.find((element) => element.id === event.options.input);
+				let element = instance.model.inputs.find((element) => element.id === event.options.input)
 
-				instance.socket.send(element.cmd);
+				instance.socket.send(element.cmd)
 			},
-		};
+		}
 
 	// Change Test patterns
 	// All models
@@ -172,18 +219,18 @@ exports.getActions = function (instance) {
 		options: [
 			{
 				type: 'dropdown',
-				name: 'Test Patterns',
+				label: 'Test Patterns',
 				id: 'pattern',
 				default: '0',
 				choices: nova_config.CHOICES_TESTPATTERNS,
 			},
 		],
 		callback: async (event) => {
-			let element = nova_config.CHOICES_TESTPATTERNS.find((element) => element.id === event.options.pattern);
+			let element = nova_config.CHOICES_TESTPATTERNS.find((element) => element.id === event.options.pattern)
 
-			instance.socket.send(element.cmd);
+			instance.socket.send(element.cmd)
 		},
-	};
+	}
 
 	// Change Display mode
 	// all models
@@ -192,18 +239,18 @@ exports.getActions = function (instance) {
 		options: [
 			{
 				type: 'dropdown',
-				name: 'Display Mode',
+				label: 'Display Mode',
 				id: 'display_mode',
 				default: '0',
 				choices: instance.model.displayModes,
 			},
 		],
 		callback: async (event) => {
-			let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode);
+			let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode)
 
-			instance.socket.send(element.cmd);
+			instance.socket.send(element.cmd)
 		},
-	};
+	}
 
 	// Working mode
 	// VX6s & J6
@@ -213,18 +260,18 @@ exports.getActions = function (instance) {
 			options: [
 				{
 					type: 'dropdown',
-					name: 'Working Mode',
+					label: 'Working Mode',
 					id: 'working_mode',
 					default: '0',
 					choices: instance.model.workingModes,
 				},
 			],
 			callback: async (event) => {
-				let element = instance.model.workingModes.find((element) => element.id === event.options.working_mode);
+				let element = instance.model.workingModes.find((element) => element.id === event.options.working_mode)
 
-				instance.socket.send(element.cmd);
+				instance.socket.send(element.cmd)
 			},
-		};
+		}
 	}
 
 	// PIP
@@ -235,18 +282,18 @@ exports.getActions = function (instance) {
 			options: [
 				{
 					type: 'dropdown',
-					name: 'On/Off',
+					label: 'On/Off',
 					id: 'value',
 					default: '0',
 					choices: instance.model.piponoffs,
 				},
 			],
 			callback: async (event) => {
-				let element = instance.model.piponoffs.find((element) => element.id === event.options.value);
+				let element = instance.model.piponoffs.find((element) => element.id === event.options.value)
 
-				instance.socket.send(element.cmd);
+				instance.socket.send(element.cmd)
 			},
-		};
+		}
 	}
 
 	// Layer update / configuration (VX1000 only)
@@ -321,35 +368,35 @@ exports.getActions = function (instance) {
 				},
 			],
 			callback: async (event) => {
-				let enabled = event.options.enabled;
-				let initialX = event.options.initialX;
-				let initialY = event.options.initialY;
-				let hWidth = event.options.hWidth;
-				let vHeight = event.options.vHeight;
-				let layer = instance.model.layers.find((element) => element.id === event.options.layerNumber);
-				let cardNumber = instance.model.cardNo.find((element) => element.id === event.options.cardNumber);
-				let layerPriority = instance.model.layerPriority.find((element) => element.id === event.options.layerPriority);
-				let connectorCode = instance.model.connectorCode.find((element) => element.id === event.options.connectorCode);
-				let opacity = event.options.opacity;
+				let enabled = event.options.enabled
+				let initialX = event.options.initialX
+				let initialY = event.options.initialY
+				let hWidth = event.options.hWidth
+				let vHeight = event.options.vHeight
+				let layer = instance.model.layers.find((element) => element.id === event.options.layerNumber)
+				let cardNumber = instance.model.cardNo.find((element) => element.id === event.options.cardNumber)
+				let layerPriority = instance.model.layerPriority.find((element) => element.id === event.options.layerPriority)
+				let connectorCode = instance.model.connectorCode.find((element) => element.id === event.options.connectorCode)
+				let opacity = event.options.opacity
 
-				const MAX_INT32 = Math.pow(2, 32) - 1;
+				const MAX_INT32 = Math.pow(2, 32) - 1
 
 				// truncate to int and clamp parameter ranges, clamp to 32 bit integer range
-				initialX = Math.trunc(initialX);
-				initialX = Math.max(0, Math.min(initialX, MAX_INT32));
+				initialX = Math.trunc(initialX)
+				initialX = Math.max(0, Math.min(initialX, MAX_INT32))
 
-				initialY = Math.trunc(initialY);
-				initialY = Math.max(0, Math.min(initialY, MAX_INT32));
+				initialY = Math.trunc(initialY)
+				initialY = Math.max(0, Math.min(initialY, MAX_INT32))
 
-				hWidth = Math.trunc(hWidth);
-				hWidth = Math.max(0, Math.min(hWidth, MAX_INT32));
+				hWidth = Math.trunc(hWidth)
+				hWidth = Math.max(0, Math.min(hWidth, MAX_INT32))
 
-				vHeight = Math.trunc(vHeight);
-				vHeight = Math.max(0, Math.min(vHeight, MAX_INT32));
+				vHeight = Math.trunc(vHeight)
+				vHeight = Math.max(0, Math.min(vHeight, MAX_INT32))
 
 				// Opacity (range between 0x00 - 0x64, 0 - 100 in decimal)
-				opacity = Math.trunc(opacity);
-				opacity = Math.max(0, Math.min(opacity, 100));
+				opacity = Math.trunc(opacity)
+				opacity = Math.max(0, Math.min(opacity, 100))
 
 				let cmd = getLayerUpdateCommandVX1000(
 					enabled,
@@ -361,12 +408,12 @@ exports.getActions = function (instance) {
 					cardNumber.cmd,
 					layerPriority.cmd,
 					connectorCode.cmd,
-					opacity
+					opacity,
 				)
 
-				instance.socket.send(cmd);
+				instance.socket.send(cmd)
 			},
-		};
+		}
 	}
 
 	// Scaling
@@ -377,18 +424,18 @@ exports.getActions = function (instance) {
 			options: [
 				{
 					type: 'dropdown',
-					name: 'Scale',
+					label: 'Scale',
 					id: 'scale',
 					default: '0',
 					choices: nova_config.CHOICES_SCALING,
 				},
 			],
 			callback: async (event) => {
-				let element = nova_config.CHOICES_SCALING.find((element) => element.id === event.options.scale);
+				let element = nova_config.CHOICES_SCALING.find((element) => element.id === event.options.scale)
 
-				instance.socket.send(element.cmd);
+				instance.socket.send(element.cmd)
 			},
-		};
+		}
 	}
 
 	// LOAD PRESETS
@@ -406,18 +453,18 @@ exports.getActions = function (instance) {
 			options: [
 				{
 					type: 'dropdown',
-					name: 'Preset',
+					label: 'Preset',
 					id: 'preset',
 					default: '0',
 					choices: instance.model.presets,
 				},
 			],
 			callback: async (event) => {
-				let element = instance.model.presets.find((element) => element.id === event.options.preset);
+				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
-				instance.socket.send(element.cmd);
+				instance.socket.send(element.cmd)
 			},
-		};
+		}
 	}
 
 	// VX6s
@@ -427,18 +474,18 @@ exports.getActions = function (instance) {
 			options: [
 				{
 					type: 'dropdown',
-					name: 'Preset',
+					label: 'Preset',
 					id: 'preset',
 					default: '0',
 					choices: instance.model.presets,
 				},
 			],
 			callback: async (event) => {
-				let element = instance.model.presets.find((element) => element.id === event.options.preset);
+				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
-				instance.socket.send(element.cmd);
+				instance.socket.send(element.cmd)
 			},
-		};
+		}
 
 		actions['take'] = {
 			name: 'Take Preview to Program',
@@ -447,12 +494,12 @@ exports.getActions = function (instance) {
 				let cmd = Buffer.from([
 					0x55, 0xaa, 0x00, 0x00, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x2d, 0x00, 0x00, 0x13, 0x01, 0x00,
 					0x00, 0x95, 0x56,
-				]);
+				])
 
-				instance.socket.send(cmd);
+				instance.socket.send(cmd)
 			},
-		};
+		}
 	}
 
-	return actions;
+	return actions
 }

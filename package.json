@@ -7,10 +7,10 @@
 		"format": "prettier -w ."
 	},
 	"devDependencies": {
-		"@companion-module/tools": "~1.4.0"
+		"@companion-module/tools": "^1.4.2"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.5.0"
+		"@companion-module/base": "^1.7.0"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json"
 }

@@ -86,7 +86,7 @@ class NovaStarInstance extends InstanceBase {
 
 	initTCP() {
 		if (this.socket !== undefined) {
-			// clean up the socket and keep Companion connection status up to date in the event that the socket ceases to exist
+			// clean up the socket and keep Companion connection status up to date
 			this.socket.destroy()
 			delete this.socket
 			this.updateStatus('disconnected')

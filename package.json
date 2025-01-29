@@ -1,16 +1,16 @@
 {
 	"name": "novastar-controller",
-	"version": "2.3.0",
+	"version": "2.4.1",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"format": "prettier -w ."
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^1.5.0"
+		"@companion-module/tools": "^2.1.0"
 	},
 	"dependencies": {
-		"@companion-module/base": "^1.8.0"
+		"@companion-module/base": "^1.11.2"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json"
 }

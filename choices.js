@@ -356,7 +356,7 @@ exports.CONFIG_MODEL = {
 
     novaProHD: { id: 'novaProHD', label: 'NovaPro HD', brightness: exports.CHOICES_BRIGHTNESS, inputs: exports.CHOICES_INPUTS_NOVAPROHD, displayModes: exports.CHOICES_DISPLAYMODE, piponoffs: exports.CHOICES_PIP_ONOFF },
 
-    novaProUHDJr: { id: 'novaProUHDJr', label: 'NovaPro UHD Jr', brightness: exports.CHOICES_BRIGHTNESS_VX1000, displayModes: exports.CHOICES_DISPLAYMODE_VX1000, presets: exports.CHOICES_PRESETS_NovaProUHDJR },
+    novaProUHDJr: { id: 'novaProUHDJr', label: 'NovaPro UHD Jr', brightness: exports.CHOICES_BRIGHTNESS_VX1000, displayModes: exports.CHOICES_DISPLAYMODE_VX1000, presets: exports.CHOICES_PRESETS_NovaProUHDJr },
 
     mctrl4k: { id: 'mctrl4k', label: 'MCTRL4K', brightness: exports.CHOICES_BRIGHTNESS, inputs: exports.CHOICES_INPUTS_MCTRL4K, displayModes: exports.CHOICES_DISPLAYMODE },
 

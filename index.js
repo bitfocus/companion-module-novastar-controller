@@ -1,7 +1,8 @@
 // NovaStar-Controller
-const { InstanceBase, TCPHelper, runEntrypoint } = require('@companion-module/base')
+const { InstanceBase, TCPHelper, runEntrypoint, InstanceStatus } = require('@companion-module/base')
 const actions = require('./actions')
 const nova_config = require('./choices')
+const { buffer } = require('stream/consumers')
 
 class NovaStarInstance extends InstanceBase {
 	constructor(internal) {
@@ -22,6 +23,14 @@ class NovaStarInstance extends InstanceBase {
 			}
 			return 0
 		})
+	}
+
+	toHexString(msg) {
+		let resp = ''
+		for (var i = 0; i < msg.length; i++) {
+			resp += ('0' + msg[i].toString(16)).slice(-2) + ':'
+		}
+		return resp
 	}
 
 	updateActions() {
@@ -72,10 +81,11 @@ class NovaStarInstance extends InstanceBase {
 
 		if (this.config.modelID !== undefined) {
 			this.model = nova_config.CONFIG_MODEL[this.config.modelID]
-		} else {
-			this.config.modelID = 'vx4s'
-			this.model = nova_config.CONFIG_MODEL['vx4s']
 		}
+		// else {
+		// 	this.config.modelID = 'vx4s'
+		// 	this.model = nova_config.CONFIG_MODEL['vx4s']
+		// }
 
 		// this is not called by Companion directly, so we need to call this to load the actions into Companion
 		this.updateActions()
@@ -83,13 +93,34 @@ class NovaStarInstance extends InstanceBase {
 		// start up the TCP socket and attmept to get connected to the NovaStar device
 		this.initTCP()
 	}
+	// calculates the checksum for dynamic commands
+	getCommandChecksum(pipCommandBuffer) {
+		// we can't include the first two bytes in our checksum calculation, so we are taking a subarray excluding the first two bytes
+		const summableBuffer = pipCommandBuffer.subarray(2)
+
+		let sum = 0
+
+		// sum up all of the bytes (except for the first two bytes)
+		for (let i = 0; i < summableBuffer.length; i++) {
+			sum += summableBuffer[i]
+		}
+
+		// add the magic number (from novastar) to the end of the sum to generate the checksum
+		sum += 0x5555
+
+		// split the sum into two bytes in little endian, this will be placed on the end of our command to serve as the checksum
+		const resultChecksumBuffer = Buffer.allocUnsafe(2)
+		resultChecksumBuffer.writeInt16LE(sum)
+
+		return resultChecksumBuffer
+	}
 
 	initTCP() {
 		if (this.socket !== undefined) {
 			// clean up the socket and keep Companion connection status up to date
 			this.socket.destroy()
 			delete this.socket
-			this.updateStatus('disconnected')
+			this.updateStatus(InstanceStatus.Disconnected, 'disconnected')
 		}
 
 		if (this.config.port === undefined) {
@@ -101,7 +132,7 @@ class NovaStarInstance extends InstanceBase {
 			// create a TCPHelper instance to use as our TCP socket
 			this.socket = new TCPHelper(this.config.host, this.config.port)
 
-			this.updateStatus('connecting')
+			this.updateStatus(InstanceStatus.Connecting, `Connecting to ${this.config.host}`)
 
 			this.socket.on('status_change', (status, message) => {
 				this.log('debug', message)
@@ -111,17 +142,47 @@ class NovaStarInstance extends InstanceBase {
 				// make sure that we log and update Companion connection status for a network failure
 				this.log('Network error', err)
 				this.log('error', 'Network error: ' + err.message)
-				this.updateStatus('connection_failure')
+				this.updateStatus(InstanceStatus.ConnectionFailure, `Cannot connect to ${this.config.host}`)
 			})
 
 			this.socket.on('connect', () => {
-				let cmd = Buffer.from([
-					0x55, 0xaa, 0x00, 0x00, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00,
-					0x57, 0x56,
-				])
-				this.socket.send(cmd)
+				// extract the 'Brightness' from the 1st sending card
+				// let cmd = []
+				// for (const p of nova_config.CHOICES_DISPLAYMODE_MCTRL) {
+				// 	cmd = p.cmd.subarray(0, p.cmd.length - 2)
+
+				// 	// cmd.push(
+				// 	// 	Buffer.from([
+				// 	// 		0x55,
+				// 	// 		0xaa, // header
+				// 	// 		0x00, // ack (unused)
+				// 	// 		0x10 + p, // serial counter
+				// 	// 		0xfe, // source address
+				// 	// 		0x00, // destination address
+				// 	// 		0x01, // device type
+				// 	// 		p, // port address
+				// 	// 		0x00,
+				// 	// 		0x00, // board address
+				// 	// 		0x00, // code
+				// 	// 		0x00, // reserved
+				// 	// 		0x01,
+				// 	// 		0x00,
+				// 	// 		0x00,
+				// 	// 		0x02, // register address
+				// 	// 		0x05,
+				// 	// 		0x00, // data length
+				// 	// 	]),
+				// 	// )
+				// 	cmd = Buffer.concat([cmd, this.getCommandChecksum(cmd)])
+				// 	this.log('debug', this.toHexString(cmd))
+				// 	//this.socket.send(Buffer.concat(cmd))
+				// }
 				this.log('debug', 'Connected')
-				this.updateStatus('ok')
+				this.updateStatus(InstanceStatus.Ok, 'Connected')
+			})
+
+			this.socket.on('data', (msg) => {
+				this.log('debug', this.toHexString(msg) + '\n')
 			})
 		}
 	}

@@ -1,27 +1,5 @@
 const nova_config = require('./choices')
 
-// calculates the checksum that is required when sending a bytestream for layer configuration to the VX1000
-function getLayerUpdateCommandVX1000Checksum(pipCommandBuffer) {
-	// we can't include the first two bytes in our checksum calculation, so we are taking a subarray excluding the first two bytes
-	const summableBuffer = pipCommandBuffer.subarray(2)
-
-	let sum = 0
-
-	// sum up all of the bytes (except for the first two bytes)
-	for (let i = 0; i < summableBuffer.length; i++) {
-		sum += summableBuffer[i]
-	}
-
-	// add the magic number (from novastar) to the end of the sum to generate the checksum
-	sum += 0x5555
-
-	// split the sum into two bytes in little endian, this will be placed on the end of our command to serve as the checksum for the VX1000 to verify
-	const resultChecksumBuffer = Buffer.allocUnsafe(2)
-	resultChecksumBuffer.writeInt16LE(sum)
-
-	return resultChecksumBuffer
-}
-
 // function to build the byte sequence given the configurable layer options for configuring layers on VX1000
 function getLayerUpdateCommandVX1000(
 	enabled,
@@ -92,7 +70,7 @@ function getLayerUpdateCommandVX1000(
 	bufferArray.push(initialOpacityBuffer)
 
 	// calculate checksum for the last two bytes
-	bufferArray.push(getLayerUpdateCommandVX1000Checksum(Buffer.concat(bufferArray)))
+	bufferArray.push(instance.getCommandChecksum(Buffer.concat(bufferArray)))
 
 	// combine all the buffers into a single buffer to send to the device
 	let commandBuffer = Buffer.concat(bufferArray)
@@ -101,17 +79,15 @@ function getLayerUpdateCommandVX1000(
 	return commandBuffer
 }
 
-function makeBrightnessCommand(pct) {
-	let val = Math.round(255 * (pct / 100))
+function makeBrightnessCommand(pct,instance) {
+	let val = Math.round(255 * pct / 100)
 	let buf = []
 
 	buf.push(
-		Buffer.from([
-			0x55, 0xaa, 0x00, 0x00, 0xfe, 0xff, 0x01, 0xff, 0xff, 0xff, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x01, 0x00, val,
-		]),
+		Buffer.from([0x55,0xaa,	0x00,	0x00,	0xfe,	0xff,	0x01,	0xff,	0xff,	0xff,	0x01,	0x00,	0x01,	0x00,	0x00,	0x02,	0x01,	0x00,	val,]),
 	)
 	//buf.push(val)
-	buf.push(getLayerUpdateCommandVX1000Checksum(Buffer.concat(buf)))
+	buf.push(instance.getCommandChecksum(Buffer.concat(buf)))
 
 	return Buffer.concat(buf)
 }
@@ -177,7 +153,8 @@ exports.getActions = function (instance) {
 				/*
 					Adjust value based on dynamic variable here
 				*/
-				let cmd = makeBrightnessCommand(val)
+				let cmd = makeBrightnessCommand(val,instance)
+				instance.log('debug',instance.toHexString(cmd));
 				instance.socket.send(cmd)
 			},
 		}
@@ -186,14 +163,14 @@ exports.getActions = function (instance) {
 	// Change Input
 	// VX6s, VX4S, NovaProHD, MCTRL4k, VX1000, VX600
 
-	if (
-		instance.config.modelID == 'vx4s' ||
-		instance.config.modelID == 'vx6s' ||
-		instance.config.modelID == 'mctrl4k' ||
-		instance.config.modelID == 'vx1000' ||
-		instance.config.modelID == 'novaProHD' ||
-		instance.config.modelID == 'vx600'
-	)
+	if (instance.model.inputs) {
+		// 	instance.config.modelID == 'vx4s' ||
+		// 	instance.config.modelID == 'vx6s' ||
+		// 	instance.config.modelID == 'mctrl4k' ||
+		// 	instance.config.modelID == 'vx1000' ||
+		// 	instance.config.modelID == 'novaProHD' ||
+		// 	instance.config.modelID == 'vx600'
+		// )
 		actions['change_input'] = {
 			name: 'Change Input',
 			options: [
@@ -211,6 +188,7 @@ exports.getActions = function (instance) {
 				instance.socket.send(element.cmd)
 			},
 		}
+	}
 
 	// Change Test patterns
 	// All models
@@ -254,7 +232,8 @@ exports.getActions = function (instance) {
 
 	// Working mode
 	// VX6s & J6
-	if (instance.config.modelID == 'vx6s' || instance.config.modelID == 'j6') {
+	if (instance.model.workingModes) {
+		// instance.config.modelID == 'vx6s' || instance.config.modelID == 'j6') {
 		actions['change_working_mode'] = {
 			name: 'Change Working Mode',
 			options: [
@@ -276,7 +255,8 @@ exports.getActions = function (instance) {
 
 	// PIP
 	// VX4S, NovaProHD
-	if (instance.config.modelID == 'vx4s' || instance.config.modelID == 'novaProHD') {
+	if (instance.model.piponoffs) {
+		// instance.config.modelID == 'vx4s' || instance.config.modelID == 'novaProHD') {
 		actions['pip_onoff'] = {
 			name: 'PIP On/Off',
 			options: [
@@ -297,7 +277,8 @@ exports.getActions = function (instance) {
 	}
 
 	// Layer update / configuration (VX1000 only)
-	if (instance.config.modelID == 'vx1000') {
+	if (instance.model.layers) {
+		//instance.config.modelID == 'vx1000') {
 		actions['update_layer_vx1000'] = {
 			name: 'Update Layer VX1000',
 			options: [

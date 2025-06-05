@@ -1,6 +1,6 @@
 {
 	"name": "novastar-controller",
-	"version": "2.5.1",
+	"version": "2.5.2",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",

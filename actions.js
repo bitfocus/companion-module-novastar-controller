@@ -1,4 +1,3 @@
-import { EndOfLineState } from 'typescript'
 import * as nova_config from './choices.js'
 import { Regex, InstanceStatus } from '@companion-module/base'
 

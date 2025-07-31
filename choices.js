@@ -436,7 +436,7 @@ export const CONFIG_MODEL = {
 	j6: { id: 'j6', label: 'J6', displayModes: CHOICES_DISPLAYMODE_VX1000, presets: CHOICES_PRESETS_J6, workingModes: CHOICES_WORKINGMODE_J6 },
 
 	vxPro: {
-		id: 'vxpro', label: 'VX Pro', brightness: CHOICES_BRIGHTNESS_VX1000, displayModes: CHOICES_DISPLAYMODE_VX1000, inputs: CHOICES_INPUTS_VX1000, presets: CHOICES_PRESETS_VX1000,
+		id: 'vxPro', label: 'VX Pro', brightness: CHOICES_BRIGHTNESS_VX1000, displayModes: CHOICES_DISPLAYMODE_VX1000, inputs: CHOICES_INPUTS_VX1000, presets: CHOICES_PRESETS_VX1000,
 		pipOnOffs: CHOICES_PIP_ONOFF, layers: CHOICES_LAYERS_VX1000, cardNo: CHOICES_CARDNO_VX1000, layerPriority: CHOICES_LAYERPRIORITY_VX1000, connectorCode: CHOICES_CONNECTORCODE_VX1000
   },
 	// vxPro: {

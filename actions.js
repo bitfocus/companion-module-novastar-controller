@@ -132,6 +132,7 @@ export const getActions = function (instance) {
 			instance.sendMessage(element.cmd)
 		},
 	}
+
 	actions['set_brightness'] = {
 		name: 'Set Brightness',
 		options: [

@@ -128,18 +128,21 @@ class NovaStarInstance extends InstanceBase {
 	}
 
 	async init(config) {
+		if (config.modelID && nova_config.CONFIG_MODEL[config.modelID] == undefined) {
+			config.modelID = undefined
+		}
 		this.config = config
 
-		if (this.config.modelID !== undefined) {
+		if (this.config.modelID) {
 			this.model = nova_config.CONFIG_MODEL[this.config.modelID]
+
+			// this is not called by Companion directly, so we need to call this to load the actions into Companion
+			this.init_variables()
+			this.updateActions()
+
+			// start up the TCP socket and attmept to get connected to the NovaStar device
+			this.initTCP()
 		}
-
-		// this is not called by Companion directly, so we need to call this to load the actions into Companion
-		this.init_variables()
-		this.updateActions()
-
-		// start up the TCP socket and attmept to get connected to the NovaStar device
-		this.initTCP()
 	}
 
 	// calculates the checksum for dynamic commands
@@ -174,12 +177,10 @@ class NovaStarInstance extends InstanceBase {
 			this.updateStatus(InstanceStatus.Disconnected, 'disconnected')
 		}
 
-		if (this.config.port === undefined) {
-			// use TCP port 5200 by default
-			this.config.port = 5200
-		}
+		// use TCP port 5200 by default
+		this.config.port = 5200
 
-		if (this.config.modelID == 'vxpro') {
+		if (this.config.modelID == 'vxPro') {
 			this.config.port = 15200
 		}
 
@@ -369,7 +370,7 @@ class NovaStarInstance extends InstanceBase {
 		// and we need to re-connect the socket to the new address)
 		let resetConnection = false
 
-		if (this.config.host != config.host) {
+		if (this.config.host != config.host || this.config.modelID != config.modelID) {
 			resetConnection = true
 		}
 

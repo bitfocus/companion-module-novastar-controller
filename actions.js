@@ -13,6 +13,7 @@ function getLayerUpdateCommandVX1000(
 	layerPriorityBuffer,
 	connectorCodeBuffer,
 	opacity,
+	instance
 ) {
 	let bufferArray = []
 
@@ -390,9 +391,8 @@ export const getActions = function (instance) {
 		}
 	}
 
-	// Layer update / configuration (VX1000 only)
+	// Layer update / configuration
 	if (instance.model.layers) {
-		//instance.config.modelID == 'vx1000') {
 		actions['update_layer_vx1000'] = {
 			name: 'Update Layer VX',
 			options: [
@@ -504,6 +504,7 @@ export const getActions = function (instance) {
 					layerPriority.cmd,
 					connectorCode.cmd,
 					opacity,
+					instance
 				)
 
 				instance.sendMessage(cmd)

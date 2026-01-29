@@ -8,7 +8,7 @@
 		"format": "prettier -w ."
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.1.0"
+		"@companion-module/tools": "^2.6.1"
 	},
 	"dependencies": {
 		"@companion-module/base": "1.12.x"

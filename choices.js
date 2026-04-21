@@ -551,7 +551,13 @@ export const CONFIG_MODEL = {
   },
 
 	vx600: {
-		id: 'vx600', label: 'VX600', brightness: CHOICES_BRIGHTNESS_VX1000, displayModes: CHOICES_DISPLAYMODE_VX600,
+		// Display modes: use VX1000's Normal/Freeze/Black frames, not CHOICES_DISPLAYMODE_VX600.
+		// Issue #95: the dedicated "VX600" display-mode array (register 04:00:00:13) causes
+		// Normal/Black to only turn off half the screen with a hard cut. v2.5.2 pointed vx600
+		// at CHOICES_DISPLAYMODE_VX1000 (register 50:00:20:02, 1-byte value 00/01/02) and
+		// worked correctly on real hardware. A later commit swapped it to CHOICES_DISPLAYMODE_VX600
+		// which introduced the bug. Keeping the working 2.5.2 mapping.
+		id: 'vx600', label: 'VX600', brightness: CHOICES_BRIGHTNESS_VX1000, displayModes: CHOICES_DISPLAYMODE_VX1000,
 		inputs: CHOICES_INPUTS_VX600, presets: CHOICES_PRESETS_VX1000
 	},
 

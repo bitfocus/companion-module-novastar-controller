@@ -157,7 +157,7 @@ export function getPresets(instance) {
 		}
 
 		const brightValues = []
-		for (let pct = 0; pct <= 100; pct += 10) {
+		for (let pct = 100; pct >= 0; pct -= 5) {
 			brightValues.push({ name: `${pct}%`, value: pct })
 		}
 
@@ -171,20 +171,20 @@ export function getPresets(instance) {
 		// Brightness adjust buttons
 		presets['brightness_up'] = {
 			type: 'simple',
-			name: 'Brightness +5%',
-			style: { text: 'Bright\\n+5%', size: 'auto', color: WHITE, bgcolor: BLACK },
+			name: 'Brightness +1%',
+			style: { text: 'Bright\\n+1%', size: 'auto', color: WHITE, bgcolor: BLACK },
 			steps: [
-				{ down: [{ actionId: 'set_brightness', options: { mode: 'A', which: 'O', value: '0', adj: '5' } }] },
+				{ down: [{ actionId: 'set_brightness', options: { mode: 'A', which: 'O', value: '0', adj: '1' } }] },
 			],
 			feedbacks: [],
 		}
 
 		presets['brightness_down'] = {
 			type: 'simple',
-			name: 'Brightness -5%',
-			style: { text: 'Bright\\n-5%', size: 'auto', color: WHITE, bgcolor: BLACK },
+			name: 'Brightness -1%',
+			style: { text: 'Bright\\n-1%', size: 'auto', color: WHITE, bgcolor: BLACK },
 			steps: [
-				{ down: [{ actionId: 'set_brightness', options: { mode: 'A', which: 'O', value: '0', adj: '-5' } }] },
+				{ down: [{ actionId: 'set_brightness', options: { mode: 'A', which: 'O', value: '0', adj: '-1' } }] },
 			],
 			feedbacks: [],
 		}
@@ -205,10 +205,16 @@ export function getPresets(instance) {
 
 		model.inputs.forEach((input) => {
 			const pid = `input_${input.id}`
+			const label = input.label.toLowerCase()
+			// HDMI presets render large (24pt); DisplayPort presets slightly smaller (18pt)
+			// to keep the 'DP' / 'DisplayPort' label from clipping. Everything else: auto.
+			let size = 'auto'
+			if (label.includes('hdmi')) size = '24'
+			else if (label.includes('dp') || label.includes('displayport') || label.includes('display port')) size = '18'
 			presets[pid] = {
 				type: 'simple',
 				name: input.label,
-				style: { text: input.label, size: 'auto', color: WHITE, bgcolor: BLACK },
+				style: { text: input.label, size, color: WHITE, bgcolor: BLACK },
 				steps: [
 					{ down: [{ actionId: 'change_input', options: { input: input.id } }] },
 				],

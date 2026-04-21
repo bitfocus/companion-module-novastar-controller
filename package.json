@@ -13,5 +13,8 @@
 	"dependencies": {
 		"@companion-module/base": "~2.0.0"
 	},
-	"prettier": "@companion-module/tools/.prettierrc.json"
+	"prettier": "@companion-module/tools/.prettierrc.json",
+	"engines": {
+		"node": "^22.20"
+	}
 }

@@ -1,5 +1,5 @@
 // NovaStar-Controller
-import { InstanceBase, TCPHelper, InstanceStatus } from '@companion-module/base'
+import { InstanceBase, TCPHelper, InstanceStatus, Regex } from '@companion-module/base'
 import * as actions from './actions.js'
 import * as nova_config from './choices.js'
 import { getPresets } from './presets.js'
@@ -135,7 +135,7 @@ class NovaStarInstance extends InstanceBase {
 				label: 'IP Address (leave blank for offline programming)',
 				width: 6,
 				default: '',
-				regex: this.REGEX_IP,
+				regex: Regex.IP,
 			},
 		]
 	}

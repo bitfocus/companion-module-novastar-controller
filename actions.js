@@ -116,28 +116,30 @@ export const getActions = function (instance) {
 	// 	instance.config.modelID == 'vx600' ||
 	// 	instance.config.modelID == 'vx16s'
 	// ) {
-	actions['change_brightness'] = {
-		name: 'Change Brightness',
-		options: [
-			{
-				type: 'dropdown',
-				name: 'Brightness',
-				id: 'brightness',
-				default: '0',
-				choices: instance.model.brightness,
+	if (instance.model.brightness) {
+		actions['change_brightness'] = {
+			name: 'Change Brightness',
+			options: [
+				{
+					type: 'dropdown',
+					name: 'Brightness',
+					id: 'brightness',
+					default: '0',
+					choices: instance.model.brightness,
+				},
+			],
+			callback: async (event) => {
+				let element = instance.model.brightness.find((element) => element.id === event.options.brightness)
+
+				instance.sendMessage(element.cmd)
+
+				// Optimistic feedback update - parse percentage from label
+				const pctMatch = element.label.match(/(\d+)/)
+				if (pctMatch) {
+					instance.updateState('brightness', parseInt(pctMatch[1]))
+				}
 			},
-		],
-		callback: async (event) => {
-			let element = instance.model.brightness.find((element) => element.id === event.options.brightness)
-
-			instance.sendMessage(element.cmd)
-
-			// Optimistic feedback update - parse percentage from label
-			const pctMatch = element.label.match(/(\d+)/)
-			if (pctMatch) {
-				instance.updateState('brightness', parseInt(pctMatch[1]))
-			}
-		},
+		}
 	}
 
 	actions['set_brightness'] = {
@@ -299,7 +301,7 @@ export const getActions = function (instance) {
 
 	// Test patterns
 	// VX with variables
-	if (instance.config.modelID.slice(0, 2) == 'vx') {
+	if (instance.config.modelID && instance.config.modelID.slice(0, 2) == 'vx') {
 		actions['test_pattern_vx'] = {
 			name: 'Select Test Pattern (VX Series)',
 			options: [

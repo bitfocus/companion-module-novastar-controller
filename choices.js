@@ -1,3 +1,11 @@
+import {
+	CHOICES_BRIGHTNESS_PRO,
+	CHOICES_PRESETS_PRO,
+	CHOICES_DISPLAYMODE_PRO,
+	CHOICES_INPUTS_VX2000_PRO,
+	CHOICES_INPUTS_PRO_SMALL,
+} from './choices_pro.js'
+
 export const CHOICES_BRIGHTNESS = [
     { id: '0',  label: '3%',   cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0xFF,0x01,0xFF,0xFF,0xFF,0x01,0x00,0x01,0x00,0x00,0x02,0x01,0x00,0x08,0x5D,0x5A]) },
     { id: '1',  label: '5%',   cmd: Buffer.from([0x55,0xAA,0x00,0x00,0xFE,0xFF,0x01,0xFF,0xFF,0xFF,0x01,0x00,0x01,0x00,0x00,0x02,0x01,0x00,0x0D,0x62,0x5A]) },
@@ -577,6 +585,40 @@ export const CONFIG_MODEL = {
 	vxPro: {
 		id: 'vxPro', label: 'VX Pro', brightness: CHOICES_BRIGHTNESS_VX1000, displayModes: CHOICES_DISPLAYMODE_VX1000,
 		inputs: CHOICES_INPUTS_VXPRO, presets: CHOICES_PRESETS_VX1000
+	},
+
+	// ==================== VX Pro Series (VX2000/VX1000/VX600/VX400 Pro) ====================
+	// Per "VX Pro Series V1.0.5 Control Protocol". Uses TCP port 15200, same
+	// `sum + 0x5555` checksum as the legacy VX/MCTRL frames. The `series: 'pro'`
+	// marker routes the model through the Pro-only actions in actions.js and
+	// triggers the 15200 port override in index.js::initTCP().
+	vx2000pro: {
+		id: 'vx2000pro', label: 'VX2000 Pro', series: 'pro',
+		brightness: CHOICES_BRIGHTNESS_PRO,
+		displayModes: CHOICES_DISPLAYMODE_PRO,
+		presets: CHOICES_PRESETS_PRO,
+		inputs: CHOICES_INPUTS_VX2000_PRO,
+	},
+	vx1000pro: {
+		id: 'vx1000pro', label: 'VX1000 Pro', series: 'pro',
+		brightness: CHOICES_BRIGHTNESS_PRO,
+		displayModes: CHOICES_DISPLAYMODE_PRO,
+		presets: CHOICES_PRESETS_PRO,
+		inputs: CHOICES_INPUTS_PRO_SMALL,
+	},
+	vx600pro: {
+		id: 'vx600pro', label: 'VX600 Pro', series: 'pro',
+		brightness: CHOICES_BRIGHTNESS_PRO,
+		displayModes: CHOICES_DISPLAYMODE_PRO,
+		presets: CHOICES_PRESETS_PRO,
+		inputs: CHOICES_INPUTS_PRO_SMALL,
+	},
+	vx400pro: {
+		id: 'vx400pro', label: 'VX400 Pro', series: 'pro',
+		brightness: CHOICES_BRIGHTNESS_PRO,
+		displayModes: CHOICES_DISPLAYMODE_PRO,
+		presets: CHOICES_PRESETS_PRO,
+		inputs: CHOICES_INPUTS_PRO_SMALL,
 	},
 	// vxPro: {
 	// 	id: 'vxpro', label: 'VX Pro', brightness: CHOICES_BRIGHTNESS, sources: CHOICES_VXPRO_SOURCES, displayModes: CHOICES_DISPLAYMODE, presets: CHOICES_VXPRO_PRESET,}

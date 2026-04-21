@@ -430,7 +430,9 @@ class NovaStarInstance extends InstanceBase {
 		// use TCP port 5200 by default
 		this.config.port = 5200
 
-		if (this.config.modelID == 'vxPro') {
+		// VX Pro (legacy) and the VX Pro Series (VX2000/VX1000/VX600/VX400 Pro)
+		// all speak on TCP 15200 per their respective protocol docs.
+		if (this.config.modelID == 'vxPro' || (this.model && this.model.series === 'pro')) {
 			this.config.port = 15200
 		}
 

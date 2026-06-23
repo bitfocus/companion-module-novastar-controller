@@ -20,5 +20,17 @@ export function compileVariableDefinitions() {
 			name: 'Global Brightness',
 			variableId: 'brite',
 		},
+		{
+			name: 'Active Input',
+			variableId: 'active_input',
+		},
+		{
+			name: 'Display Mode',
+			variableId: 'display_mode',
+		},
+		{
+			name: 'Active Preset',
+			variableId: 'active_preset',
+		},
 	]
 }

@@ -2,6 +2,8 @@
 import { InstanceBase, TCPHelper, runEntrypoint, InstanceStatus } from '@companion-module/base'
 import * as actions from './actions.js'
 import * as nova_config from './choices.js'
+import { getPresets } from './presets.js'
+import { getFeedbacks } from './feedbacks.js'
 import { compileVariableDefinitions } from './variables.js'
 
 class NovaStarInstance extends InstanceBase {
@@ -28,6 +30,17 @@ class NovaStarInstance extends InstanceBase {
 
 		this.waiting = []
 		this.msgCounter = 0
+
+		// State tracking for feedbacks
+		this.state = {
+			brightness: -1,    // current brightness % (0-100), -1 = unknown
+			displayMode: '-1', // current display mode id
+			activeInput: '-1', // current input id
+			activePreset: '-1', // current preset id
+			workingMode: '-1',  // current working mode id
+		}
+
+		this.pollTimer = undefined
 	}
 
 	/**
@@ -83,6 +96,14 @@ class NovaStarInstance extends InstanceBase {
 		this.setActionDefinitions(actions.getActions(this))
 	}
 
+	updatePresets() {
+		this.setPresetDefinitions(getPresets(this))
+	}
+
+	updateFeedbacks() {
+		this.setFeedbackDefinitions(getFeedbacks(this))
+	}
+
 	init_variables() {
 		this.variableDefs = compileVariableDefinitions(this)
 		this.setVariableDefinitions(this.variableDefs)
@@ -97,15 +118,7 @@ class NovaStarInstance extends InstanceBase {
 				width: 12,
 				label: 'Information',
 				value:
-					'This module will connect to a NovaStar MCTRL4K, VX4S, VX6S, NovaProHD, or NovaPro UHD Jr,VX1000, VX600, VX16S & J6 LED Processor.',
-			},
-			{
-				type: 'textinput',
-				id: 'host',
-				label: 'IP Address',
-				width: 6,
-				default: '192.168.1.11',
-				regex: this.REGEX_IP,
+					'This module will connect to a NovaStar MCTRL4K, MCTRLxx0, VX4S, VX6S, VX400, VX600, VX1000, VX16S, VX Pro, NovaProHD, NovaPro UHD, NovaPro UHD Jr & J6 LED Processor. Select a model below to begin programming actions. IP address can be set later for offline programming.',
 			},
 			{
 				type: 'dropdown',
@@ -115,11 +128,24 @@ class NovaStarInstance extends InstanceBase {
 				choices: this.CHOICES_MODEL,
 				default: 'j6',
 			},
+			{
+				type: 'textinput',
+				id: 'host',
+				label: 'IP Address (leave blank for offline programming)',
+				width: 6,
+				default: '',
+				regex: this.REGEX_IP,
+			},
 		]
 	}
 
 	// When module gets deleted
 	async destroy() {
+		if (this.pollTimer) {
+			clearInterval(this.pollTimer)
+			delete this.pollTimer
+		}
+
 		if (this.socket !== undefined) {
 			this.socket.destroy()
 		}
@@ -139,9 +165,18 @@ class NovaStarInstance extends InstanceBase {
 			// this is not called by Companion directly, so we need to call this to load the actions into Companion
 			this.init_variables()
 			this.updateActions()
+			this.updateFeedbacks()
+			this.updatePresets()
 
-			// start up the TCP socket and attmept to get connected to the NovaStar device
-			this.initTCP()
+			// start up the TCP socket and attempt to get connected to the NovaStar device
+			// if no host is configured, stay in Disconnected state for offline programming
+			if (this.config.host) {
+				this.initTCP()
+			} else {
+				this.updateStatus(InstanceStatus.Disconnected, 'No host configured - offline programming available')
+			}
+		} else {
+			this.updateStatus(InstanceStatus.Disconnected, 'No model selected')
 		}
 	}
 
@@ -167,8 +202,222 @@ class NovaStarInstance extends InstanceBase {
 		return resultChecksumBuffer
 	}
 
+	/**
+	 * Build a read/query command for the given register address.
+	 * Read commands have code byte (byte[10]) = 0x00 and specify expected response length.
+	 *
+	 * @param {number[]} register - 4-byte register address [addr0, addr1, addr2, addr3]
+	 * @param {number} readLen - expected response data length in bytes
+	 * @param {number[]} [dest] - optional destination bytes [destAddr, devType, portAddr0, portAddr1]
+	 * @returns {Buffer}
+	 */
+	buildReadCommand(register, readLen, dest = [0x00, 0x00, 0x00, 0x00]) {
+		let cmd = Buffer.from([
+			0x55, 0xaa,           // header
+			0x00,                 // ack
+			0x00,                 // serial counter (overwritten by sendMessage)
+			0xfe,                 // source address
+			dest[0], dest[1], dest[2], dest[3], // destination
+			0x00,                 // reserved
+			0x00,                 // code = 0x00 (READ)
+			0x00,                 // reserved
+			register[0], register[1], register[2], register[3], // register address
+			readLen & 0xFF, (readLen >> 8) & 0xFF, // data length (expected response)
+		])
+
+		return Buffer.concat([cmd, this.getCommandChecksum(cmd)])
+	}
+
+	/**
+	 * Poll the processor for current state and update feedbacks.
+	 * Called periodically when connected.
+	 */
+	async pollState() {
+		if (!this.socket || !this.socket.isConnected) return
+
+		try {
+			// Poll brightness (register 01 00 00 02, read 1 byte from receiver)
+			if (this.model.brightness) {
+				let cmd = this.buildReadCommand([0x01, 0x00, 0x00, 0x02], 0x01, [0xFF, 0x01, 0xFF, 0xFF])
+				let data = await this.sendMessage(cmd)
+				if (data && data.length >= 2) {
+					const rawVal = parseInt(data.slice(0, 2), 16)
+					const pct = Math.round(((rawVal * 100) / 255) * 2) / 2
+					if (this.state.brightness !== pct) {
+						this.state.brightness = pct
+						this.brite = pct
+						this.setVariableValues({ brite: pct })
+						this.checkFeedbacks('brightness_match')
+					}
+				}
+			}
+
+			// Poll display mode (register 04 00 00 13, read 2 bytes)
+			if (this.model.displayModes) {
+				let cmd = this.buildReadCommand([0x04, 0x00, 0x00, 0x13], 0x02)
+				let data = await this.sendMessage(cmd)
+				if (data && data.length >= 2) {
+					const modeVal = parseInt(data.slice(0, 2), 16)
+					// Map protocol value to display mode id
+					// Normal=0x03, Freeze=0x04, Black=0x05
+					const modeMap = { 3: '0', 4: '1', 5: '2' }
+					const newMode = modeMap[modeVal] !== undefined ? modeMap[modeVal] : '-1'
+					if (this.state.displayMode !== newMode) {
+						this.state.displayMode = newMode
+						this.checkFeedbacks('display_mode_match')
+					}
+				}
+			}
+
+			// Poll active input (Layer 1) - register varies by model type
+			if (this.model.inputs) {
+				const inputData = await this.pollActiveInput()
+				if (inputData !== null && this.state.activeInput !== inputData) {
+					this.state.activeInput = inputData
+					this.checkFeedbacks('input_match')
+				}
+			}
+		} catch (e) {
+			this.log('debug', `Poll error: ${e.message}`)
+		}
+	}
+
+	/**
+	 * Query the active input for Layer 1.
+	 * Different model families use different register addresses and data formats.
+	 * Returns the matching input id string, or null if unable to determine.
+	 */
+	async pollActiveInput() {
+		const modelID = this.config.modelID
+		let data = null
+
+		try {
+			if (['vx1000', 'vx600', 'vx400', 'vx16s'].includes(modelID)) {
+				// Register 12 00 02 13 (Layer 1), read 3 bytes → data[0] = CardNo
+				let cmd = this.buildReadCommand([0x12, 0x00, 0x02, 0x13], 0x03)
+				data = await this.sendMessage(cmd)
+				if (data && data.length >= 2) {
+					const cardNo = parseInt(data.slice(0, 2), 16)
+					// CardNo maps to input id directly (Layer 1 inputs start at id '0')
+					return String(cardNo)
+				}
+			} else if (modelID === 'vx6s') {
+				// Register 12 00 02 13 (Window 1), read 3 bytes → data[0] = CardNo
+				let cmd = this.buildReadCommand([0x12, 0x00, 0x02, 0x13], 0x03)
+				data = await this.sendMessage(cmd)
+				if (data && data.length >= 2) {
+					const cardNo = parseInt(data.slice(0, 2), 16)
+					return String(cardNo)
+				}
+			} else if (modelID === 'vxPro') {
+				// Register 00 00 02 13, read 2 bytes → data[0]=layer, data[1]=source
+				let cmd = this.buildReadCommand([0x00, 0x00, 0x02, 0x13], 0x02)
+				data = await this.sendMessage(cmd)
+				if (data && data.length >= 4) {
+					const layer = parseInt(data.slice(0, 2), 16)
+					const source = parseInt(data.slice(2, 4), 16)
+					// Find matching input by matching layer+source in the command data
+					const match = this.model.inputs.find((inp) => {
+						return inp.cmd[18] === layer && inp.cmd[19] === source
+					})
+					return match ? match.id : null
+				}
+			} else if (modelID === 'vx4s') {
+				// Register 2d 00 20 02, read 1 byte
+				let cmd = this.buildReadCommand([0x2D, 0x00, 0x20, 0x02], 0x01)
+				data = await this.sendMessage(cmd)
+				if (data && data.length >= 2) {
+					const val = parseInt(data.slice(0, 2), 16)
+					const match = this.model.inputs.find((inp) => inp.cmd[18] === val)
+					return match ? match.id : null
+				}
+			} else if (modelID === 'mctrl4k') {
+				// Register 23 00 00 02, read 1 byte
+				let cmd = this.buildReadCommand([0x23, 0x00, 0x00, 0x02], 0x01)
+				data = await this.sendMessage(cmd)
+				if (data && data.length >= 2) {
+					const val = parseInt(data.slice(0, 2), 16)
+					const match = this.model.inputs.find((inp) => inp.cmd[18] === val)
+					return match ? match.id : null
+				}
+			} else if (['novaProHD', 'novaProUHDJr'].includes(modelID)) {
+				// Register 22 00 20 02, read 1 byte
+				let cmd = this.buildReadCommand([0x22, 0x00, 0x20, 0x02], 0x01)
+				data = await this.sendMessage(cmd)
+				if (data && data.length >= 2) {
+					const val = parseInt(data.slice(0, 2), 16)
+					const match = this.model.inputs.find((inp) => inp.cmd[18] === val)
+					return match ? match.id : null
+				}
+			}
+		} catch (e) {
+			this.log('debug', `Input poll error: ${e.message}`)
+		}
+
+		return null
+	}
+
+	/**
+	 * Start periodic polling of device state
+	 */
+	startPolling() {
+		this.stopPolling()
+		// Poll every 2 seconds
+		this.pollTimer = setInterval(() => {
+			this.pollState()
+		}, 2000)
+		// Immediate first poll
+		this.pollState()
+	}
+
+	/**
+	 * Stop periodic polling
+	 */
+	stopPolling() {
+		if (this.pollTimer) {
+			clearInterval(this.pollTimer)
+			delete this.pollTimer
+		}
+	}
+
+	/**
+	 * Update state when an action is executed (optimistic update).
+	 * Called from actions to provide immediate feedback without waiting for next poll.
+	 */
+	updateState(key, value) {
+		if (this.state[key] !== value) {
+			this.state[key] = value
+
+			// Update corresponding variable with friendly label
+			if (key === 'activeInput' && this.model.inputs) {
+				const match = this.model.inputs.find((i) => i.id === value)
+				this.setVariableValues({ active_input: match ? match.label : value })
+			} else if (key === 'displayMode' && this.model.displayModes) {
+				const match = this.model.displayModes.find((d) => d.id === value)
+				this.setVariableValues({ display_mode: match ? match.label : value })
+			} else if (key === 'activePreset' && this.model.presets) {
+				const match = this.model.presets.find((p) => p.id === value)
+				this.setVariableValues({ active_preset: match ? match.label : value })
+			}
+
+			// Trigger the matching feedback check
+			const feedbackMap = {
+				brightness: 'brightness_match',
+				displayMode: 'display_mode_match',
+				activeInput: 'input_match',
+				activePreset: 'preset_match',
+				workingMode: 'working_mode_match',
+			}
+			if (feedbackMap[key]) {
+				this.checkFeedbacks(feedbackMap[key])
+			}
+		}
+	}
+
 	initTCP() {
 		let receivebuffer = Buffer.from('')
+
+		this.stopPolling()
 
 		if (this.socket !== undefined) {
 			// clean up the socket and keep Companion connection status up to date
@@ -198,6 +447,7 @@ class NovaStarInstance extends InstanceBase {
 				// make sure that we log and update Companion connection status for a network failure
 				this.log('Network error', err)
 				this.log('error', 'Network error: ' + err.message)
+				this.stopPolling()
 				this.updateStatus(InstanceStatus.ConnectionFailure, `Cannot connect to ${this.config.host}`)
 			})
 
@@ -296,6 +546,9 @@ class NovaStarInstance extends InstanceBase {
 
 				this.log('debug', 'Connected')
 				this.updateStatus(InstanceStatus.Ok, 'Connected')
+
+				// Start polling device state for feedbacks
+				this.startPolling()
 			})
 
 			this.socket.on('data', (chunk) => {
@@ -344,6 +597,10 @@ class NovaStarInstance extends InstanceBase {
 
 	// assemble command and send it
 	async sendMessage(cmd) {
+		if (!this.socket || !this.socket.isConnected) {
+			this.log('warn', 'Cannot send command - not connected to device')
+			return ''
+		}
 		return new Promise(async (resolve) => {
 			let msg = Buffer.from(cmd.subarray(0, cmd.length - 2))
 			let isQuery = msg[10] == 0
@@ -376,11 +633,33 @@ class NovaStarInstance extends InstanceBase {
 
 		this.config = config
 
-		// re-build actions for current model
-		this.updateActions()
+		// re-build model and actions when model changes
+		if (this.config.modelID && nova_config.CONFIG_MODEL[this.config.modelID]) {
+			this.model = nova_config.CONFIG_MODEL[this.config.modelID]
+			this.init_variables()
+			this.updateActions()
+			this.updateFeedbacks()
+			this.updatePresets()
 
-		if (resetConnection === true || this.socket === undefined) {
-			this.initTCP()
+			if (this.config.host) {
+				if (resetConnection === true || this.socket === undefined) {
+					this.initTCP()
+				}
+			} else {
+				// No host - destroy existing connection and go to offline mode
+				if (this.socket !== undefined) {
+					this.socket.destroy()
+					delete this.socket
+				}
+				this.updateStatus(InstanceStatus.Disconnected, 'No host configured - offline programming available')
+			}
+		} else {
+			// No valid model selected
+			if (this.socket !== undefined) {
+				this.socket.destroy()
+				delete this.socket
+			}
+			this.updateStatus(InstanceStatus.Disconnected, 'No model selected')
 		}
 	}
 }

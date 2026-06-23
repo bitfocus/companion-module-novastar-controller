@@ -1,6 +1,6 @@
 {
 	"name": "novastar-controller",
-	"version": "2.6.4",
+	"version": "3.0.0",
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
@@ -8,11 +8,13 @@
 		"format": "prettier -w ."
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.6.1"
+		"@companion-module/tools": "^2.7.1"
 	},
 	"dependencies": {
-		"@companion-module/base": "1.12.x"
+		"@companion-module/base": "~2.0.0"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json",
-	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+	"engines": {
+		"node": "^22.20"
+	}
 }

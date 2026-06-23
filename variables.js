@@ -1,24 +1,11 @@
 export function compileVariableDefinitions() {
-	return [
-		{
-			name: 'Controller ID',
-			variableId: 'ctrl_id',
-		},
-		{
-			name: 'Controller Type',
-			variableId: 'ctrl_type',
-		},
-		{
-			name: 'Controller Firmware Version',
-			variableId: 'ctrl_fw',
-		},
-		// {
-		// 	name: 'LED Panel Firmware Version',
-		// 	variableId: 'led_fw',
-		// },
-		{
-			name: 'Global Brightness',
-			variableId: 'brite',
-		},
-	]
+	return {
+		ctrl_id: { name: 'Controller ID' },
+		ctrl_type: { name: 'Controller Type' },
+		ctrl_fw: { name: 'Controller Firmware Version' },
+		brite: { name: 'Global Brightness' },
+		active_input: { name: 'Active Input' },
+		display_mode: { name: 'Display Mode' },
+		active_preset: { name: 'Active Preset' },
+	}
 }

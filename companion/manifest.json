@@ -1,4 +1,6 @@
 {
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+	"type": "connection",
 	"id": "novastar-controller",
 	"name": "novastar-controller",
 	"shortname": "novastar",
@@ -19,12 +21,12 @@
 	],
 	"legacyIds": ["novastar-vx4s"],
 	"runtime": {
-		"type": "node18",
+		"type": "node22",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
 		"entrypoint": "../index.js"
 	},
 	"manufacturer": "Novastar",
-	"products": ["MCTRL4K", "VX4S", "VX6S", "NovaPro HD", "NovaPro UHD Jr", "VX1000", "VX600", "VX16S", "J6"],
+	"products": ["MCTRL4K", "VX4S", "VX6S", "NovaPro HD", "NovaPro UHD", "NovaPro UHD Jr", "VX Pro", "VX1000", "VX600", "VX400", "VX16S", "J6"],
 	"keywords": ["LED Processing"]
 }

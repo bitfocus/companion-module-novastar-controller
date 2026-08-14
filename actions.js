@@ -1,4 +1,5 @@
 import * as nova_config from './choices.js'
+import * as pro from './choices_pro.js'
 import { Regex, InstanceStatus } from '@companion-module/base'
 
 // function to build the byte sequence given the configurable layer options for configuring layers on VX1000
@@ -116,22 +117,30 @@ export const getActions = function (instance) {
 	// 	instance.config.modelID == 'vx600' ||
 	// 	instance.config.modelID == 'vx16s'
 	// ) {
-	actions['change_brightness'] = {
-		name: 'Change Brightness',
-		options: [
-			{
-				type: 'dropdown',
-				name: 'Brightness',
-				id: 'brightness',
-				default: '0',
-				choices: instance.model.brightness,
-			},
-		],
-		callback: async (event) => {
-			let element = nova_config.CHOICES_BRIGHTNESS.find((element) => element.id === event.options.brightness)
+	if (instance.model.brightness) {
+		actions['change_brightness'] = {
+			name: 'Change Brightness',
+			options: [
+				{
+					type: 'dropdown',
+					name: 'Brightness',
+					id: 'brightness',
+					default: '0',
+					choices: instance.model.brightness,
+				},
+			],
+			callback: async (event) => {
+				let element = instance.model.brightness.find((element) => element.id === event.options.brightness)
 
-			instance.sendMessage(element.cmd)
-		},
+				instance.sendMessage(element.cmd)
+
+				// Optimistic feedback update - parse percentage from label
+				const pctMatch = element.label.match(/(\d+)/)
+				if (pctMatch) {
+					instance.updateState('brightness', parseInt(pctMatch[1]))
+				}
+			},
+		}
 	}
 
 	actions['set_brightness'] = {
@@ -142,6 +151,7 @@ export const getActions = function (instance) {
 				label: 'Set / Adjust',
 				id: 'mode',
 				default: 'S',
+				disableAutoExpression: true,
 				choices: [
 					{ id: 'A', label: 'Adjust +/- Value' },
 					{ id: 'S', label: 'Set Direct Value' },
@@ -164,9 +174,7 @@ export const getActions = function (instance) {
 				type: 'textinput',
 				label: 'Value (0-100)',
 				id: 'value',
-				isVisible: (options, data) => {
-					return options.mode === 'S'
-				},
+				isVisibleExpression: '$(options:mode) == "S"',
 				default: 0,
 				useVariables: true,
 				regex: Regex.FLOAT,
@@ -177,16 +185,14 @@ export const getActions = function (instance) {
 				label: 'By (+/-) ',
 				id: 'adj',
 				default: 0,
-				isVisible: (options, data) => {
-					return options.mode === 'A'
-				},
+				isVisibleExpression: '$(options:mode) == "A"',
 				useVariables: true,
 				regex: Regex.SIGNED_FLOAT,
 			},
 		],
-		callback: async (event, context) => {
-			const val = parseFloat(await context.parseVariablesInString(event.options.value))
-			const aVal = parseFloat(await context.parseVariablesInString(event.options.adj)) || 0
+		callback: async (event) => {
+			const val = parseFloat(event.options.value)
+			const aVal = parseFloat(event.options.adj) || 0
 			const which = event.options.which || 'O'
 			let wb = 'brite' + (which == 'O' ? '' : '_' + which.toLowerCase())
 
@@ -197,6 +203,11 @@ export const getActions = function (instance) {
 			let cmd = makeBrightnessCommand(newVal, instance, which)
 			instance.log('debug', instance.toHexString(cmd))
 			instance.sendMessage(cmd)
+
+			// Optimistic feedback update for overall brightness
+			if (which === 'O') {
+				instance.updateState('brightness', Math.round(newVal))
+			}
 		},
 		// }
 	}
@@ -227,6 +238,7 @@ export const getActions = function (instance) {
 				let element = instance.model.inputs.find((element) => element.id === event.options.input)
 
 				instance.sendMessage(element.cmd)
+				instance.updateState('activeInput', event.options.input)
 			},
 		}
 	}
@@ -263,7 +275,7 @@ export const getActions = function (instance) {
 		let element = pat_list.find((element) => element.id == which)
 
 		if (element == undefined) {
-			which = parseInt(await ctx.parseVariablesInString(event.options.pattern))
+			which = parseInt(event.options.pattern)
 			element = pat_list[which]
 		}
 
@@ -290,7 +302,7 @@ export const getActions = function (instance) {
 
 	// Test patterns
 	// VX with variables
-	if (instance.config.modelID.slice(0, 2) == 'vx') {
+	if (instance.config.modelID && instance.config.modelID.slice(0, 2) == 'vx') {
 		actions['test_pattern_vx'] = {
 			name: 'Select Test Pattern (VX Series)',
 			options: [
@@ -345,6 +357,7 @@ export const getActions = function (instance) {
 			let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode)
 
 			instance.sendMessage(element.cmd)
+			instance.updateState('displayMode', event.options.display_mode)
 		},
 	}
 
@@ -366,12 +379,13 @@ export const getActions = function (instance) {
 				let element = instance.model.workingModes.find((element) => element.id === event.options.working_mode)
 
 				instance.sendMessage(element.cmd)
+				instance.updateState('workingMode', event.options.working_mode)
 			},
 		}
 	}
 
 	// PIP
-	if (instance.model.piponoffs) {
+	if (instance.model.pipOnOffs) {
 		actions['pip_onoff'] = {
 			name: 'PIP On/Off',
 			options: [
@@ -380,11 +394,11 @@ export const getActions = function (instance) {
 					label: 'On/Off',
 					id: 'value',
 					default: '0',
-					choices: instance.model.piponoffs,
+					choices: instance.model.pipOnOffs,
 				},
 			],
 			callback: async (event) => {
-				let element = instance.model.piponoffs.find((element) => element.id === event.options.value)
+				let element = instance.model.pipOnOffs.find((element) => element.id === event.options.value)
 
 				instance.sendMessage(element.cmd)
 			},
@@ -560,6 +574,7 @@ export const getActions = function (instance) {
 				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
 				instance.sendMessage(element.cmd)
+				instance.updateState('activePreset', event.options.preset)
 			},
 		}
 	}
@@ -581,6 +596,7 @@ export const getActions = function (instance) {
 				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
 				instance.sendMessage(element.cmd)
+				instance.updateState('activePreset', event.options.preset)
 			},
 		}
 
@@ -594,6 +610,125 @@ export const getActions = function (instance) {
 				])
 
 				instance.sendMessage(cmd)
+			},
+		}
+	}
+
+	// ==================== VX Pro Series actions ====================
+	// Gated on `model.series === 'pro'`. These expose the extended feature set
+	// from the VX Pro Series V1.0.5 protocol spec — save/delete preset, layer
+	// switch, USB playback, audio enable/mute/volume/source, HDCP, color
+	// temperature, 3D, restart. The base brightness / preset / input / display-
+	// mode actions above already work for Pro models since they come from the
+	// same CONFIG_MODEL shape.
+	if (instance.model.series === 'pro') {
+		actions['pro_save_preset'] = {
+			name: 'Pro: Save Preset',
+			options: [{ type: 'dropdown', label: 'Preset', id: 'preset', default: '0', choices: pro.CHOICES_PRESETS_PRO_SAVE }],
+			callback: async (event) => {
+				const el = pro.CHOICES_PRESETS_PRO_SAVE.find((x) => x.id === event.options.preset)
+				if (el) instance.sendMessage(el.cmd)
+			},
+		}
+		actions['pro_delete_preset'] = {
+			name: 'Pro: Delete Preset',
+			options: [{ type: 'dropdown', label: 'Preset', id: 'preset', default: '0', choices: pro.CHOICES_PRESETS_PRO_DELETE }],
+			callback: async (event) => {
+				const el = pro.CHOICES_PRESETS_PRO_DELETE.find((x) => x.id === event.options.preset)
+				if (el) instance.sendMessage(el.cmd)
+			},
+		}
+
+		actions['pro_layer_switch'] = {
+			name: 'Pro: Layer On/Off',
+			options: [{ type: 'dropdown', label: 'Layer', id: 'layer', default: 'L1_on', choices: pro.CHOICES_LAYER_ONOFF_PRO }],
+			callback: async (event) => {
+				const el = pro.CHOICES_LAYER_ONOFF_PRO.find((x) => x.id === event.options.layer)
+				if (el) instance.sendMessage(el.cmd)
+			},
+		}
+
+		actions['pro_usb_playback'] = {
+			name: 'Pro: USB Playback',
+			options: [{ type: 'dropdown', label: 'Action', id: 'action', default: '1', choices: pro.CHOICES_USB_PLAYBACK_PRO }],
+			callback: async (event) => {
+				const el = pro.CHOICES_USB_PLAYBACK_PRO.find((x) => x.id === event.options.action)
+				if (el) instance.sendMessage(el.cmd)
+			},
+		}
+
+		actions['pro_audio_enable'] = {
+			name: 'Pro: Audio Enable',
+			options: [],
+			callback: async () => instance.sendMessage(pro.CMD_AUDIO_ENABLE_PRO),
+		}
+		actions['pro_audio_mute'] = {
+			name: 'Pro: Audio Mute',
+			options: [],
+			callback: async () => instance.sendMessage(pro.CMD_AUDIO_MUTE_PRO),
+		}
+		actions['pro_audio_volume'] = {
+			name: 'Pro: Set Screen Volume',
+			options: [{ type: 'number', label: 'Volume (0-100)', id: 'volume', default: 50, min: 0, max: 100 }],
+			callback: async (event) => {
+				instance.sendMessage(pro.buildVolumeCmd(parseInt(event.options.volume, 10)))
+			},
+		}
+		actions['pro_audio_source'] = {
+			name: 'Pro: Set Audio Source',
+			options: [{ type: 'dropdown', label: 'Source', id: 'source', default: 'hdmi1', choices: pro.CHOICES_AUDIO_SRC_PRO }],
+			callback: async (event) => {
+				const el = pro.CHOICES_AUDIO_SRC_PRO.find((x) => x.id === event.options.source)
+				if (el) instance.sendMessage(el.cmd)
+			},
+		}
+
+		actions['pro_hdcp'] = {
+			name: 'Pro: HDCP Enable/Disable',
+			options: [
+				{
+					type: 'dropdown', label: 'HDCP', id: 'state', default: '1',
+					choices: [{ id: '1', label: 'Enable' }, { id: '0', label: 'Disable' }],
+				},
+			],
+			callback: async (event) => {
+				instance.sendMessage(event.options.state === '1' ? pro.CMD_HDCP_ENABLE_PRO : pro.CMD_HDCP_DISABLE_PRO)
+			},
+		}
+
+		actions['pro_color_temp'] = {
+			name: 'Pro: Set Color Temperature',
+			options: [{ type: 'number', label: 'Kelvin (e.g. 6500)', id: 'k', default: 6500, min: 2000, max: 10000 }],
+			callback: async (event) => {
+				instance.sendMessage(pro.buildColorTempCmd(parseInt(event.options.k, 10)))
+			},
+		}
+
+		actions['pro_3d'] = {
+			name: 'Pro: 3D Control',
+			options: [{ type: 'dropdown', label: 'Command', id: 'cmd', default: 'enable', choices: pro.CHOICES_3D_PRO }],
+			callback: async (event) => {
+				const el = pro.CHOICES_3D_PRO.find((x) => x.id === event.options.cmd)
+				if (el) instance.sendMessage(el.cmd)
+			},
+		}
+
+		actions['pro_restart'] = {
+			name: 'Pro: Restart Device',
+			options: [],
+			callback: async () => instance.sendMessage(pro.CMD_RESTART_PRO),
+		}
+
+		actions['pro_factory_reset'] = {
+			name: 'Pro: Factory Reset',
+			options: [
+				{
+					type: 'dropdown', label: 'Retain IP?', id: 'keep', default: '1',
+					choices: [{ id: '1', label: 'Retain IP' }, { id: '0', label: 'Reset everything' }],
+				},
+			],
+			callback: async (event) => {
+				instance.sendMessage(event.options.keep === '1' ? pro.CMD_FACTORY_RESET_KEEP_IP : pro.CMD_FACTORY_RESET_DROP_IP)
 			},
 		}
 	}

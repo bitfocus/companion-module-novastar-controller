@@ -1,6 +1,7 @@
 {
 	"name": "novastar-controller",
 	"version": "2.6.4",
+	"license": "MIT",
 	"main": "index.js",
 	"type": "module",
 	"scripts": {

@@ -97,7 +97,7 @@ class NovaStarInstance extends InstanceBase {
 				width: 12,
 				label: 'Information',
 				value:
-					'This module will connect to a NovaStar MCTRL4K, VX4S, VX6S, NovaProHD, or NovaPro UHD Jr,VX1000, VX600, VX16S & J6 LED Processor.',
+					'This module will connect to a NovaStar MCTRL4K, MCTRL R5, VX4S, VX6S, NovaProHD, or NovaPro UHD Jr, VX1000, VX600, VX16S & J6 LED Processor.',
 			},
 			{
 				type: 'textinput',
@@ -202,9 +202,19 @@ class NovaStarInstance extends InstanceBase {
 			})
 
 			this.socket.on('connect', async () => {
-				// Get the model of the sending card/processor
-				let data
+				const probeTimeout = 2000
+				const probe = async (label, command) => {
+					try {
+						const data = await this.sendMessage(command, probeTimeout)
+						this.log('debug', `${label} = ${data}`)
+						return data
+					} catch (err) {
+						this.log('debug', `${label} probe failed: ${err.message}`)
+						return undefined
+					}
+				}
 
+				// Get the model of the sending card/processor
 				let cmd = Buffer.from([
 					0x55,
 					0xaa, // header
@@ -226,29 +236,29 @@ class NovaStarInstance extends InstanceBase {
 					0x00, // data length
 				])
 
-				// get sending device model id
+				// The controller ID read is the handshake. Later reads are optional.
 				let msg = Buffer.concat([cmd, this.getCommandChecksum(cmd)])
-
-				this.log('debug', `==> ${this.toHexString(msg, ':')}`)
-				data = await this.sendMessage(msg)
-				this.log('debug', `Controller ID = ${data}`)
+				let data = await probe('Controller ID', msg)
+				if (data === undefined) {
+					this.updateStatus(
+						InstanceStatus.UnknownError,
+						'No M3 protocol response on TCP 5200. Confirm LAN control is enabled on the processor.',
+					)
+					return
+				}
 				this.setVariableValues({ ctrl_id: data })
 				this.setVariableValues({ ctrl_type: nova_config.MODEL_IDS[data]?.label || 'Unknown' })
 
 				// get first receiving card model id
 				msg[6] = 1
-				this.log('debug', `==> ${this.toHexString(msg, ':')}`)
-				data = await this.sendMessage(msg)
-				this.log('debug', `Receiver ID = ${data}`)
+				await probe('Receiver ID', msg)
 
 				// get DVI Status
 				msg[6] = 0
 				msg[12] = 0x17
 				msg[15] = 2
 				msg[16] = 1
-				this.log('debug', `==> ${this.toHexString(msg, ':')}`)
-				data = await this.sendMessage(msg)
-				this.log('debug', `DVI Status = ${data}`)
+				await probe('DVI Status', msg)
 
 				// sending card firmware version
 				cmd[6] = 0
@@ -258,19 +268,12 @@ class NovaStarInstance extends InstanceBase {
 				cmd[15] = 0x04
 				cmd[16] = 0x04
 				msg = Buffer.concat([cmd, this.getCommandChecksum(cmd)])
-				this.log('debug', `==> ${this.toHexString(msg, ':')}`)
-				data = await this.sendMessage(msg)
-				this.log('debug', `Controller FW = ${data}`)
-				this.setVariableValues({
-					ctrl_fw: `${parseInt(data.slice(0, 2), 16)}.${parseInt(data.slice(2, 4), 16)}.${parseInt(data.slice(4, 6), 16)}.${parseInt(data.slice(6, 8), 16)}`,
-				})
-
-				// // get first receiving card FW version
-				// msg[6] = 1
-				// this.log('debug', `==> ${this.toHexString(msg, ':')}`)
-				// data = await this.sendMessage(msg)
-				// this.log('debug', `Receiver fw = ${data}`)
-				// this.setVariableValues({ led_fw: `${parseInt(data.slice(0, 2), 16)}.${parseInt(data.slice(2, 4), 16)}.${parseInt(data.slice(4, 6), 16)}.${parseInt(data.slice(6, 8), 16)}`, })
+				data = await probe('Controller FW', msg)
+				if (data && data.length >= 8) {
+					this.setVariableValues({
+						ctrl_fw: `${parseInt(data.slice(0, 2), 16)}.${parseInt(data.slice(2, 4), 16)}.${parseInt(data.slice(4, 6), 16)}.${parseInt(data.slice(6, 8), 16)}`,
+					})
+				}
 
 				// brightness from 1st panel
 				cmd[6] = 1
@@ -281,18 +284,17 @@ class NovaStarInstance extends InstanceBase {
 				cmd[16] = 5
 
 				msg = Buffer.concat([cmd, this.getCommandChecksum(cmd)])
-				this.log('debug', `==> ${this.toHexString(msg, ':')}`)
-				data = await this.sendMessage(msg)
-				this.log('debug', `Brightness = ${data}`)
-				this.brite = Math.round(((parseInt(data.slice(0, 2), 16) * 100) / 255) * 2) / 2
-				this.setVariableValues({ brite: this.brite })
+				data = await probe('Brightness', msg)
+				if (data && data.length >= 2) {
+					this.brite = Math.round(((parseInt(data.slice(0, 2), 16) * 100) / 255) * 2) / 2
+					this.setVariableValues({ brite: this.brite })
+				}
 
 				cmd = Buffer.from(nova_config.CHOICES_DISPLAYMODE_MCTRL[0].cmd.subarray(0, 20))
 				for (let p = 7; p < 11; p++) {
 					cmd[p] = 0
 				}
-				data = await this.sendMessage(cmd)
-				this.log('debug', `Display Mode = ${data}`)
+				await probe('Display Mode', cmd)
 
 				this.log('debug', 'Connected')
 				this.updateStatus(InstanceStatus.Ok, 'Connected')
@@ -342,24 +344,58 @@ class NovaStarInstance extends InstanceBase {
 		}
 	}
 
-	// assemble command and send it
-	async sendMessage(cmd) {
-		return new Promise(async (resolve) => {
+	// assemble command and send it. timeoutMs rejects when a caller must not wait forever for a reply.
+	async sendMessage(cmd, timeoutMs = 0) {
+		return new Promise((resolve, reject) => {
+			if (!this.socket) {
+				const err = new Error('Not connected')
+				if (timeoutMs > 0) reject(err)
+				else {
+					this.log('error', err.message)
+					resolve(undefined)
+				}
+				return
+			}
+
 			let msg = Buffer.from(cmd.subarray(0, cmd.length - 2))
 			let isQuery = msg[10] == 0
 			let msgId = this.msgCounter++ % 256
-			let data = ''
+			let settled = false
 			msg[3] = msgId
 			msg = Buffer.concat([msg, this.getCommandChecksum(msg)])
 			this.log('debug', `==> ${isQuery ? ' request ' : ''}${this.toHexString(msg, ':')}`)
-			await this.socket.send(msg)
-			this.socket.once(`response${msgId}`, async (msg) => {
-				data = this.msgData(msg)
-				this.log('debug', `<== ${this.toHexString(msg, ':')}\n`)
-				this.log('debug', `    # ${msg[3]} Loc ${this.msgLocation(msg)} Data ${data}\n`)
+
+			const finish = (fn, value) => {
+				if (settled) return
+				settled = true
+				if (timer) clearTimeout(timer)
+				fn(value)
+			}
+
+			const onResponse = (response) => {
+				const data = this.msgData(response)
+				this.log('debug', `<== ${this.toHexString(response, ':')}\n`)
+				this.log('debug', `    # ${response[3]} Loc ${this.msgLocation(response)} Data ${data}\n`)
 				this.updateStatus(InstanceStatus.Ok, '')
-				if (isQuery) {
-					resolve(data)
+				if (isQuery) finish(resolve, data)
+				else finish(resolve, undefined)
+			}
+
+			let timer
+			if (timeoutMs > 0) {
+				timer = setTimeout(() => {
+					this.socket?.removeListener(`response${msgId}`, onResponse)
+					finish(reject, new Error('Timed out waiting for a protocol response'))
+				}, timeoutMs)
+			}
+
+			this.socket.once(`response${msgId}`, onResponse)
+			this.socket.send(msg).catch((err) => {
+				this.socket?.removeListener(`response${msgId}`, onResponse)
+				if (timeoutMs > 0) finish(reject, err)
+				else {
+					this.log('error', `Send failed: ${err.message}`)
+					finish(resolve, undefined)
 				}
 			})
 		})
@@ -375,9 +411,12 @@ class NovaStarInstance extends InstanceBase {
 		}
 
 		this.config = config
+		if (config.modelID && nova_config.CONFIG_MODEL[config.modelID]) {
+			this.model = nova_config.CONFIG_MODEL[config.modelID]
+		}
 
 		// re-build actions for current model
-		this.updateActions()
+		if (this.model) this.updateActions()
 
 		if (resetConnection === true || this.socket === undefined) {
 			this.initTCP()

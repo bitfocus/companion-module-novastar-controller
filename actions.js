@@ -13,7 +13,7 @@ function getLayerUpdateCommandVX1000(
 	layerPriorityBuffer,
 	connectorCodeBuffer,
 	opacity,
-	instance
+	instance,
 ) {
 	let bufferArray = []
 
@@ -116,22 +116,24 @@ export const getActions = function (instance) {
 	// 	instance.config.modelID == 'vx600' ||
 	// 	instance.config.modelID == 'vx16s'
 	// ) {
-	actions['change_brightness'] = {
-		name: 'Change Brightness',
-		options: [
-			{
-				type: 'dropdown',
-				name: 'Brightness',
-				id: 'brightness',
-				default: '0',
-				choices: instance.model.brightness,
-			},
-		],
-		callback: async (event) => {
-			let element = nova_config.CHOICES_BRIGHTNESS.find((element) => element.id === event.options.brightness)
+	if (instance.model.brightness) {
+		actions['change_brightness'] = {
+			name: 'Change Brightness',
+			options: [
+				{
+					type: 'dropdown',
+					name: 'Brightness',
+					id: 'brightness',
+					default: '0',
+					choices: instance.model.brightness,
+				},
+			],
+			callback: async (event) => {
+				let element = instance.model.brightness.find((element) => element.id === event.options.brightness)
 
-			instance.sendMessage(element.cmd)
-		},
+				if (element) instance.sendMessage(element.cmd)
+			},
+		}
 	}
 
 	actions['set_brightness'] = {
@@ -329,23 +331,24 @@ export const getActions = function (instance) {
 	}
 
 	// Change Display mode
-	// all models
-	actions['change_display_mode'] = {
-		name: 'Change Display Mode',
-		options: [
-			{
-				type: 'dropdown',
-				label: 'Display Mode',
-				id: 'display_mode',
-				default: '0',
-				choices: instance.model.displayModes,
-			},
-		],
-		callback: async (event) => {
-			let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode)
+	if (instance.model.displayModes) {
+		actions['change_display_mode'] = {
+			name: 'Change Display Mode',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Display Mode',
+					id: 'display_mode',
+					default: '0',
+					choices: instance.model.displayModes,
+				},
+			],
+			callback: async (event) => {
+				let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode)
 
-			instance.sendMessage(element.cmd)
-		},
+				if (element) instance.sendMessage(element.cmd)
+			},
+		}
 	}
 
 	// Working mode
@@ -504,7 +507,7 @@ export const getActions = function (instance) {
 					layerPriority.cmd,
 					connectorCode.cmd,
 					opacity,
-					instance
+					instance,
 				)
 
 				instance.sendMessage(cmd)

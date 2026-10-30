@@ -25,6 +25,6 @@
 		"entrypoint": "../index.js"
 	},
 	"manufacturer": "Novastar",
-	"products": ["MCTRL4K", "VX4S", "VX6S", "NovaPro HD", "NovaPro UHD Jr", "VX1000", "VX600", "VX16S", "J6"],
+	"products": ["MCTRL4K", "MCTRL R5", "VX4S", "VX6S", "NovaPro HD", "NovaPro UHD Jr", "VX1000", "VX600", "VX16S", "J6"],
 	"keywords": ["LED Processing"]
 }

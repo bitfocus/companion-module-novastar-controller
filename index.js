@@ -4,6 +4,9 @@ import * as actions from './actions.js'
 import * as nova_config from './choices.js'
 import { compileVariableDefinitions } from './variables.js'
 
+const REPLY_TIMEOUT = 2000
+const HANDSHAKE_RETRY = 5000
+
 class NovaStarInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
@@ -120,6 +123,7 @@ class NovaStarInstance extends InstanceBase {
 
 	// When module gets deleted
 	async destroy() {
+		clearTimeout(this.handshakeTimer)
 		if (this.socket !== undefined) {
 			this.socket.destroy()
 		}
@@ -127,15 +131,18 @@ class NovaStarInstance extends InstanceBase {
 		this.log('destroying module: ', this.id)
 	}
 
-	async init(config) {
+	setConfig(config) {
 		if (config.modelID && nova_config.CONFIG_MODEL[config.modelID] == undefined) {
 			config.modelID = undefined
 		}
 		this.config = config
+		this.model = config.modelID ? nova_config.CONFIG_MODEL[config.modelID] : undefined
+	}
 
-		if (this.config.modelID) {
-			this.model = nova_config.CONFIG_MODEL[this.config.modelID]
+	async init(config) {
+		this.setConfig(config)
 
+		if (this.model) {
 			// this is not called by Companion directly, so we need to call this to load the actions into Companion
 			this.init_variables()
 			this.updateActions()
@@ -170,6 +177,8 @@ class NovaStarInstance extends InstanceBase {
 	initTCP() {
 		let receivebuffer = Buffer.from('')
 
+		clearTimeout(this.handshakeTimer)
+		this.handshakeOk = false
 		if (this.socket !== undefined) {
 			// clean up the socket and keep Companion connection status up to date
 			this.socket.destroy()
@@ -201,104 +210,7 @@ class NovaStarInstance extends InstanceBase {
 				this.updateStatus(InstanceStatus.ConnectionFailure, `Cannot connect to ${this.config.host}`)
 			})
 
-			this.socket.on('connect', async () => {
-				const probeTimeout = 2000
-				const probe = async (label, command) => {
-					try {
-						const data = await this.sendMessage(command, probeTimeout)
-						this.log('debug', `${label} = ${data}`)
-						return data
-					} catch (err) {
-						this.log('debug', `${label} probe failed: ${err.message}`)
-						return undefined
-					}
-				}
-
-				// Get the model of the sending card/processor
-				let cmd = Buffer.from([
-					0x55,
-					0xaa, // header
-					0x00, // ack (unused)
-					0x00, // serial counter
-					0xfe, // source address
-					0x00, // destination address
-					0x00, // device type
-					0x00, // port address
-					0x00,
-					0x00, // board address
-					0x00, // code
-					0x00, // reserved
-					0x02,
-					0x00,
-					0x00,
-					0x00, // register address
-					0x02,
-					0x00, // data length
-				])
-
-				// The controller ID read is the handshake. Later reads are optional.
-				let msg = Buffer.concat([cmd, this.getCommandChecksum(cmd)])
-				let data = await probe('Controller ID', msg)
-				if (data === undefined) {
-					this.updateStatus(
-						InstanceStatus.UnknownError,
-						'No M3 protocol response on TCP 5200. Confirm LAN control is enabled on the processor.',
-					)
-					return
-				}
-				this.setVariableValues({ ctrl_id: data })
-				this.setVariableValues({ ctrl_type: nova_config.MODEL_IDS[data]?.label || 'Unknown' })
-
-				// get first receiving card model id
-				msg[6] = 1
-				await probe('Receiver ID', msg)
-
-				// get DVI Status
-				msg[6] = 0
-				msg[12] = 0x17
-				msg[15] = 2
-				msg[16] = 1
-				await probe('DVI Status', msg)
-
-				// sending card firmware version
-				cmd[6] = 0
-				cmd[12] = 4
-				cmd[13] = 0
-				cmd[14] = 0x10
-				cmd[15] = 0x04
-				cmd[16] = 0x04
-				msg = Buffer.concat([cmd, this.getCommandChecksum(cmd)])
-				data = await probe('Controller FW', msg)
-				if (data && data.length >= 8) {
-					this.setVariableValues({
-						ctrl_fw: `${parseInt(data.slice(0, 2), 16)}.${parseInt(data.slice(2, 4), 16)}.${parseInt(data.slice(4, 6), 16)}.${parseInt(data.slice(6, 8), 16)}`,
-					})
-				}
-
-				// brightness from 1st panel
-				cmd[6] = 1
-				cmd[12] = 1
-				cmd[13] = 0
-				cmd[14] = 0
-				cmd[15] = 2
-				cmd[16] = 5
-
-				msg = Buffer.concat([cmd, this.getCommandChecksum(cmd)])
-				data = await probe('Brightness', msg)
-				if (data && data.length >= 2) {
-					this.brite = Math.round(((parseInt(data.slice(0, 2), 16) * 100) / 255) * 2) / 2
-					this.setVariableValues({ brite: this.brite })
-				}
-
-				cmd = Buffer.from(nova_config.CHOICES_DISPLAYMODE_MCTRL[0].cmd.subarray(0, 20))
-				for (let p = 7; p < 11; p++) {
-					cmd[p] = 0
-				}
-				await probe('Display Mode', cmd)
-
-				this.log('debug', 'Connected')
-				this.updateStatus(InstanceStatus.Ok, 'Connected')
-			})
+			this.socket.on('connect', () => this.handshake())
 
 			this.socket.on('data', (chunk) => {
 				// separate buffered stream into parsed messages
@@ -344,61 +256,130 @@ class NovaStarInstance extends InstanceBase {
 		}
 	}
 
-	// assemble command and send it. timeoutMs rejects when a caller must not wait forever for a reply.
-	async sendMessage(cmd, timeoutMs = 0) {
+	// build a read request for `length` bytes at `address` on the first device of `deviceType` (0 = sending card, 1 = receiving card)
+	readCommand(deviceType, address, length) {
+		const cmd = Buffer.from([
+			0x55,
+			0xaa, // header
+			0x00, // ack (unused)
+			0x00, // serial counter
+			0xfe, // source address
+			0x00, // destination address
+			deviceType, // device type
+			0x00, // port address
+			0x00,
+			0x00, // board address
+			0x00, // code (read)
+			0x00, // reserved
+			0x00,
+			0x00,
+			0x00,
+			0x00, // register address
+			0x00,
+			0x00, // data length
+		])
+		cmd.writeUInt32LE(address, 12)
+		cmd.writeUInt16LE(length, 16)
+		return Buffer.concat([cmd, this.getCommandChecksum(cmd)])
+	}
+
+	async probe(label, cmd) {
+		try {
+			const data = await this.sendMessage(cmd, REPLY_TIMEOUT)
+			this.log('debug', `${label} = ${data}`)
+			return data
+		} catch (err) {
+			this.log('debug', `${label} probe failed: ${err.message}`)
+			return undefined
+		}
+	}
+
+	// The controller ID read is the handshake; it retries until the device answers. Later reads are optional.
+	async handshake() {
+		clearTimeout(this.handshakeTimer)
+		this.handshakeOk = false
+		const socket = this.socket
+
+		const ctrlId = await this.probe('Controller ID', this.readCommand(0, 0x00000002, 2))
+		if (socket !== this.socket || !socket.isConnected) return
+		if (ctrlId === undefined) {
+			this.updateStatus(
+				InstanceStatus.UnknownError,
+				'No M3 protocol response on TCP 5200. Confirm LAN control is enabled on the processor.',
+			)
+			this.handshakeTimer = setTimeout(() => this.handshake(), HANDSHAKE_RETRY)
+			return
+		}
+
+		this.handshakeOk = true
+		this.updateStatus(InstanceStatus.Ok, 'Connected')
+		this.setVariableValues({ ctrl_id: ctrlId, ctrl_type: nova_config.MODEL_IDS[ctrlId]?.label || 'Unknown' })
+
+		const [, , fw, brightness] = await Promise.all([
+			this.probe('Receiver ID', this.readCommand(1, 0x00000002, 2)),
+			this.probe('DVI Status', this.readCommand(0, 0x02000017, 1)),
+			this.probe('Controller FW', this.readCommand(0, 0x04100004, 4)),
+			this.probe('Brightness', this.readCommand(1, 0x02000001, 5)),
+			this.probe('Display Mode', this.readCommand(1, 0x02000100, 3)),
+		])
+
+		if (fw && fw.length >= 8) {
+			this.setVariableValues({
+				ctrl_fw: `${parseInt(fw.slice(0, 2), 16)}.${parseInt(fw.slice(2, 4), 16)}.${parseInt(fw.slice(4, 6), 16)}.${parseInt(fw.slice(6, 8), 16)}`,
+			})
+		}
+		if (brightness && brightness.length >= 2) {
+			this.brite = Math.round(((parseInt(brightness.slice(0, 2), 16) * 100) / 255) * 2) / 2
+			this.setVariableValues({ brite: this.brite })
+		}
+		this.log('debug', 'Connected')
+	}
+
+	// assemble command and send it. Rejects if it can't be sent or no reply arrives within timeoutMs.
+	async sendMessage(cmd, timeoutMs) {
 		return new Promise((resolve, reject) => {
-			if (!this.socket) {
-				const err = new Error('Not connected')
-				if (timeoutMs > 0) reject(err)
-				else {
-					this.log('error', err.message)
-					resolve(undefined)
-				}
+			const socket = this.socket
+			if (!socket) {
+				reject(new Error('Not connected'))
 				return
 			}
 
 			let msg = Buffer.from(cmd.subarray(0, cmd.length - 2))
 			let isQuery = msg[10] == 0
 			let msgId = this.msgCounter++ % 256
-			let settled = false
+			const event = `response${msgId}`
 			msg[3] = msgId
 			msg = Buffer.concat([msg, this.getCommandChecksum(msg)])
 			this.log('debug', `==> ${isQuery ? ' request ' : ''}${this.toHexString(msg, ':')}`)
 
-			const finish = (fn, value) => {
-				if (settled) return
-				settled = true
-				if (timer) clearTimeout(timer)
-				fn(value)
-			}
-
 			const onResponse = (response) => {
+				clearTimeout(timer)
 				const data = this.msgData(response)
 				this.log('debug', `<== ${this.toHexString(response, ':')}\n`)
 				this.log('debug', `    # ${response[3]} Loc ${this.msgLocation(response)} Data ${data}\n`)
-				this.updateStatus(InstanceStatus.Ok, '')
-				if (isQuery) finish(resolve, data)
-				else finish(resolve, undefined)
+				if (this.handshakeOk) this.updateStatus(InstanceStatus.Ok, '')
+				resolve(isQuery ? data : undefined)
 			}
 
-			let timer
-			if (timeoutMs > 0) {
-				timer = setTimeout(() => {
-					this.socket?.removeListener(`response${msgId}`, onResponse)
-					finish(reject, new Error('Timed out waiting for a protocol response'))
-				}, timeoutMs)
+			const fail = (err) => {
+				clearTimeout(timer)
+				socket.removeListener(event, onResponse)
+				reject(err)
 			}
 
-			this.socket.once(`response${msgId}`, onResponse)
-			this.socket.send(msg).catch((err) => {
-				this.socket?.removeListener(`response${msgId}`, onResponse)
-				if (timeoutMs > 0) finish(reject, err)
-				else {
-					this.log('error', `Send failed: ${err.message}`)
-					finish(resolve, undefined)
-				}
-			})
+			const timer = setTimeout(() => fail(new Error('Timed out waiting for a protocol response')), timeoutMs)
+
+			socket.once(event, onResponse)
+			// TCPHelper.send resolves false rather than rejecting when the socket isn't connected
+			socket.send(msg).then((sent) => {
+				if (!sent) fail(new Error('Not connected'))
+			}, fail)
 		})
+	}
+
+	// for actions, which don't wait on the reply
+	sendCommand(cmd) {
+		this.sendMessage(cmd, REPLY_TIMEOUT).catch((err) => this.log('debug', `Command not acknowledged: ${err.message}`))
 	}
 
 	async configUpdated(config) {
@@ -410,13 +391,13 @@ class NovaStarInstance extends InstanceBase {
 			resetConnection = true
 		}
 
-		this.config = config
-		if (config.modelID && nova_config.CONFIG_MODEL[config.modelID]) {
-			this.model = nova_config.CONFIG_MODEL[config.modelID]
-		}
+		this.setConfig(config)
+		if (!this.model) return
 
+		// variables are only defined in init when a model was already set
+		this.init_variables()
 		// re-build actions for current model
-		if (this.model) this.updateActions()
+		this.updateActions()
 
 		if (resetConnection === true || this.socket === undefined) {
 			this.initTCP()

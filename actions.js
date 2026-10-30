@@ -131,7 +131,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.brightness.find((element) => element.id === event.options.brightness)
 
-				if (element) instance.sendMessage(element.cmd)
+				if (element) instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -198,7 +198,7 @@ export const getActions = function (instance) {
 			instance.setVariableValues({ [wb]: newVal })
 			let cmd = makeBrightnessCommand(newVal, instance, which)
 			instance.log('debug', instance.toHexString(cmd))
-			instance.sendMessage(cmd)
+			instance.sendCommand(cmd)
 		},
 		// }
 	}
@@ -228,7 +228,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.inputs.find((element) => element.id === event.options.input)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -250,7 +250,7 @@ export const getActions = function (instance) {
 		callback: async (event) => {
 			let element = nova_config.CHOICES_TESTPATTERNS.find((element) => element.id === event.options.pattern)
 
-			instance.sendMessage(element.cmd)
+			instance.sendCommand(element.cmd)
 		},
 	}
 
@@ -286,7 +286,7 @@ export const getActions = function (instance) {
 			}
 			msg = Buffer.concat([msg, instance.getCommandChecksum(msg)]) // add
 
-			instance.sendMessage(msg)
+			instance.sendCommand(msg)
 		}
 	}
 
@@ -346,7 +346,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode)
 
-				if (element) instance.sendMessage(element.cmd)
+				if (element) instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -368,7 +368,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.workingModes.find((element) => element.id === event.options.working_mode)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -389,7 +389,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.piponoffs.find((element) => element.id === event.options.value)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -510,7 +510,7 @@ export const getActions = function (instance) {
 					instance,
 				)
 
-				instance.sendMessage(cmd)
+				instance.sendCommand(cmd)
 			},
 		}
 	}
@@ -532,7 +532,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = nova_config.CHOICES_SCALING.find((element) => element.id === event.options.scale)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -562,7 +562,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -583,7 +583,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 
@@ -596,7 +596,7 @@ export const getActions = function (instance) {
 					0x00, 0x95, 0x56,
 				])
 
-				instance.sendMessage(cmd)
+				instance.sendCommand(cmd)
 			},
 		}
 	}

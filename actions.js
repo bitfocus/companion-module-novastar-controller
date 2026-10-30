@@ -13,7 +13,7 @@ function getLayerUpdateCommandVX1000(
 	layerPriorityBuffer,
 	connectorCodeBuffer,
 	opacity,
-	instance
+	instance,
 ) {
 	let bufferArray = []
 
@@ -116,22 +116,24 @@ export const getActions = function (instance) {
 	// 	instance.config.modelID == 'vx600' ||
 	// 	instance.config.modelID == 'vx16s'
 	// ) {
-	actions['change_brightness'] = {
-		name: 'Change Brightness',
-		options: [
-			{
-				type: 'dropdown',
-				name: 'Brightness',
-				id: 'brightness',
-				default: '0',
-				choices: instance.model.brightness,
-			},
-		],
-		callback: async (event) => {
-			let element = nova_config.CHOICES_BRIGHTNESS.find((element) => element.id === event.options.brightness)
+	if (instance.model.brightness) {
+		actions['change_brightness'] = {
+			name: 'Change Brightness',
+			options: [
+				{
+					type: 'dropdown',
+					name: 'Brightness',
+					id: 'brightness',
+					default: '0',
+					choices: instance.model.brightness,
+				},
+			],
+			callback: async (event) => {
+				let element = instance.model.brightness.find((element) => element.id === event.options.brightness)
 
-			instance.sendMessage(element.cmd)
-		},
+				if (element) instance.sendCommand(element.cmd)
+			},
+		}
 	}
 
 	actions['set_brightness'] = {
@@ -196,7 +198,7 @@ export const getActions = function (instance) {
 			instance.setVariableValues({ [wb]: newVal })
 			let cmd = makeBrightnessCommand(newVal, instance, which)
 			instance.log('debug', instance.toHexString(cmd))
-			instance.sendMessage(cmd)
+			instance.sendCommand(cmd)
 		},
 		// }
 	}
@@ -226,7 +228,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.inputs.find((element) => element.id === event.options.input)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -248,7 +250,7 @@ export const getActions = function (instance) {
 		callback: async (event) => {
 			let element = nova_config.CHOICES_TESTPATTERNS.find((element) => element.id === event.options.pattern)
 
-			instance.sendMessage(element.cmd)
+			instance.sendCommand(element.cmd)
 		},
 	}
 
@@ -284,7 +286,7 @@ export const getActions = function (instance) {
 			}
 			msg = Buffer.concat([msg, instance.getCommandChecksum(msg)]) // add
 
-			instance.sendMessage(msg)
+			instance.sendCommand(msg)
 		}
 	}
 
@@ -329,23 +331,24 @@ export const getActions = function (instance) {
 	}
 
 	// Change Display mode
-	// all models
-	actions['change_display_mode'] = {
-		name: 'Change Display Mode',
-		options: [
-			{
-				type: 'dropdown',
-				label: 'Display Mode',
-				id: 'display_mode',
-				default: '0',
-				choices: instance.model.displayModes,
-			},
-		],
-		callback: async (event) => {
-			let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode)
+	if (instance.model.displayModes) {
+		actions['change_display_mode'] = {
+			name: 'Change Display Mode',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Display Mode',
+					id: 'display_mode',
+					default: '0',
+					choices: instance.model.displayModes,
+				},
+			],
+			callback: async (event) => {
+				let element = instance.model.displayModes.find((element) => element.id === event.options.display_mode)
 
-			instance.sendMessage(element.cmd)
-		},
+				if (element) instance.sendCommand(element.cmd)
+			},
+		}
 	}
 
 	// Working mode
@@ -365,7 +368,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.workingModes.find((element) => element.id === event.options.working_mode)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -386,7 +389,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.piponoffs.find((element) => element.id === event.options.value)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -504,10 +507,10 @@ export const getActions = function (instance) {
 					layerPriority.cmd,
 					connectorCode.cmd,
 					opacity,
-					instance
+					instance,
 				)
 
-				instance.sendMessage(cmd)
+				instance.sendCommand(cmd)
 			},
 		}
 	}
@@ -529,7 +532,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = nova_config.CHOICES_SCALING.find((element) => element.id === event.options.scale)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -559,7 +562,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 	}
@@ -580,7 +583,7 @@ export const getActions = function (instance) {
 			callback: async (event) => {
 				let element = instance.model.presets.find((element) => element.id === event.options.preset)
 
-				instance.sendMessage(element.cmd)
+				instance.sendCommand(element.cmd)
 			},
 		}
 
@@ -593,7 +596,7 @@ export const getActions = function (instance) {
 					0x00, 0x95, 0x56,
 				])
 
-				instance.sendMessage(cmd)
+				instance.sendCommand(cmd)
 			},
 		}
 	}

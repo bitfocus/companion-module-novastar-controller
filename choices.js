@@ -421,6 +421,8 @@ export const CONFIG_MODEL = {
 
 	mctrl: { id: 'mctrl', label: 'MCTRLxx0', brightness: CHOICES_BRIGHTNESS, inputs: CHOICES_INPUTS_MCTRL4K, displayModes: CHOICES_DISPLAYMODE_MCTRL },
 
+	mctrlR5: { id: 'mctrlR5', label: 'MCTRL R5', brightness: CHOICES_BRIGHTNESS, displayModes: CHOICES_DISPLAYMODE_MCTRL },
+
 	vx1000: {
 		id: 'vx1000', label: 'VX1000', brightness: CHOICES_BRIGHTNESS_VX1000, displayModes: CHOICES_DISPLAYMODE_VX1000, inputs: CHOICES_INPUTS_VX1000, presets: CHOICES_PRESETS_VX1000,
 		pipOnOffs: CHOICES_PIP_ONOFF, layers: CHOICES_LAYERS_VX1000, cardNo: CHOICES_CARDNO_VX1000, layerPriority: CHOICES_LAYERPRIORITY_VX1000, connectorCode: CHOICES_CONNECTORCODE_VX1000
@@ -450,6 +452,7 @@ export const MODEL_IDS = {
 	'0001': { label: 'MCTRL300', model: 'mctrl' },
 	'0111': { label: 'MCTRL6xx', model: 'mctrl' },
 	'0311': { label: 'MCTRL4K', model: 'mctrl4k' },
+	'0411': { label: 'MCTRL R5', model: 'mctrlR5' },
 	'0475': { label: 'Nova Pro UHD', model: 'novaProUHD' },
 	'0B62': { label: 'VX16S', model: 'vx16s' },
 	'0C62': { label: 'VX1000', model: 'vx1000' },

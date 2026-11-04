@@ -13,7 +13,7 @@ function getLayerUpdateCommandVX1000(
 	layerPriorityBuffer,
 	connectorCodeBuffer,
 	opacity,
-	instance,
+	instance
 ) {
 	let bufferArray = []
 
@@ -500,7 +500,7 @@ export const getActions = function (instance) {
 					layerPriority.cmd,
 					connectorCode.cmd,
 					opacity,
-					instance,
+					instance
 				)
 
 				instance.sendMessage(cmd)

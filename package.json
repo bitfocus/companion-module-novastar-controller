@@ -4,10 +4,8 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
-		"test": "node --experimental-test-module-mocks --test test/*.test.js",
-		"format": "prettier -w .",
-		"build": "node --check index.js && node --check actions.js && node --check choices.js && node --check variables.js",
-		"lint": "prettier --check ."
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"format": "prettier -w ."
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.9.0",

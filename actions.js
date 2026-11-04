@@ -13,7 +13,7 @@ function getLayerUpdateCommandVX1000(
 	layerPriorityBuffer,
 	connectorCodeBuffer,
 	opacity,
-	instance
+	instance,
 ) {
 	let bufferArray = []
 
@@ -164,9 +164,7 @@ export const getActions = function (instance) {
 				type: 'textinput',
 				label: 'Value (0-100)',
 				id: 'value',
-				isVisible: (options, data) => {
-					return options.mode === 'S'
-				},
+				isVisibleExpression: `$(options:mode) == 'S'`,
 				default: 0,
 				useVariables: true,
 				regex: Regex.FLOAT,
@@ -177,9 +175,7 @@ export const getActions = function (instance) {
 				label: 'By (+/-) ',
 				id: 'adj',
 				default: 0,
-				isVisible: (options, data) => {
-					return options.mode === 'A'
-				},
+				isVisibleExpression: `$(options:mode) == 'A'`,
 				useVariables: true,
 				regex: Regex.SIGNED_FLOAT,
 			},
@@ -504,7 +500,7 @@ export const getActions = function (instance) {
 					layerPriority.cmd,
 					connectorCode.cmd,
 					opacity,
-					instance
+					instance,
 				)
 
 				instance.sendMessage(cmd)
